@@ -1,1 +1,6 @@
-NEORV/RTL/XILINX/NeoRV32*
+**/XILINX/*
+
+!**/XILINX/*.xpr
+!**/XILINX/*.xdc
+!**/XILINX/*.vhd
+
