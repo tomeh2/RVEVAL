@@ -1,0 +1,7 @@
+C:\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe  -link  -top  clkgen  -multisrs  C:\lattice\picorv32\pll\clkgen\syn_results\synwork\clkgen_comp.srs  -osyn  C:\lattice\picorv32\pll\clkgen\syn_results\synwork\clkgen_mult.srs  -log  C:\lattice\picorv32\pll\clkgen\syn_results\synlog\clkgen_multi_srs_gen.srr 
+relcom:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe -link -top clkgen -multisrs ..\synwork\clkgen_comp.srs -osyn ..\synwork\clkgen_mult.srs -log ..\synlog\clkgen_multi_srs_gen.srr
+rc:0 success:1 runtime:0
+file:..\synwork\clkgen_comp.srs|io:i|time:1658313337|size:4554|exec:0|csum:58CC3B22DEE3C649770827A65A4068F5
+file:..\synwork\clkgen_mult.srs|io:o|time:1658313338|size:4414|exec:0|csum:
+file:..\synlog\clkgen_multi_srs_gen.srr|io:o|time:1658313338|size:1040|exec:0|csum:
+file:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe|io:i|time:1554103352|size:8734720|exec:1|csum:0A206A5298321BBDD627E7975EAE3EC2

@@ -1,0 +1,9 @@
+@N|Running in 64-bit mode
+@N|Running in 64-bit mode
+@N:"C:\lattice\neorv32\clkwiz\pll25m\pll25m.vhd":12:7:12:12|Top entity is set to pll25m.
+@N: CD630 :"C:\lattice\neorv32\clkwiz\pll25m\pll25m.vhd":12:7:12:12|Synthesizing work.pll25m.structure.
+@N: CD630 :"C:\diamond\diamond\3.11_x64\synpbase\lib\lucent\ecp5u.vhd":2083:10:2083:16|Synthesizing ecp5u.ehxplll.syn_black_box.
+@N: CD630 :"C:\diamond\diamond\3.11_x64\synpbase\lib\lucent\ecp5u.vhd":832:10:832:12|Synthesizing ecp5u.vlo.syn_black_box.
+@N: CD630 :"C:\diamond\diamond\3.11_x64\synpbase\lib\lucent\ecp5u.vhd":825:10:825:12|Synthesizing ecp5u.vhi.syn_black_box.
+@N|Running in 64-bit mode
+

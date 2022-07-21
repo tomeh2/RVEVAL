@@ -1,0 +1,7 @@
+C:\diamond\diamond\3.11_x64\synpbase\bin64\c_hdl.exe  -osyn  C:\lattice\neorv32\clkwiz\pll25m\syn_results\synwork\pll25m_comp.srs  -top  pll25m  -hdllog  C:\lattice\neorv32\clkwiz\pll25m\syn_results\synlog\pll25m_compiler.srr  -encrypt  -mp  4  -verification_mode 0  -vhdl  -prodtype  synplify_pro  -dspmac -fixsmult -infer_seqShift -nram -sdff_counter -divnmod -nostructver  -encrypt  -pro  -dmgen  C:\lattice\neorv32\clkwiz\pll25m\syn_results\dm  -lite -ui -fid2 -ram -sharing on -ll 2000 -autosm  -ignore_undefined_lib  -lib work C:\lattice\neorv32\clkwiz\pll25m\pll25m.vhd  -jobname  "compiler" 
+relcom:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\c_hdl.exe -osyn ..\synwork\pll25m_comp.srs -top pll25m -hdllog ..\synlog\pll25m_compiler.srr -encrypt -mp 4 -verification_mode 0 -vhdl -prodtype synplify_pro -dspmac -fixsmult -infer_seqShift -nram -sdff_counter -divnmod -nostructver -encrypt -pro -dmgen ..\dm -lite -ui -fid2 -ram -sharing on -ll 2000 -autosm -ignore_undefined_lib -lib work ..\..\pll25m.vhd -jobname "compiler"
+rc:0 success:1 runtime:2
+file:..\synwork\pll25m_comp.srs|io:o|time:1658142636|size:5012|exec:0|csum:
+file:..\synlog\pll25m_compiler.srr|io:o|time:1658142636|size:4745|exec:0|csum:
+file:..\..\pll25m.vhd|io:i|time:1658142635|size:3666|exec:0|csum:AF7AC54400408F98988553569A4FDBE5
+file:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\c_hdl.exe|io:i|time:1554103094|size:5681664|exec:1|csum:39598EA786684F7CB53832C08B4CCDF5

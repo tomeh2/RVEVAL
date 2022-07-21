@@ -9,9 +9,6 @@
         <Source name="gpio_device.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
-        <Source name="led_device.vhd" type="VHDL" type_short="VHDL" excluded="TRUE">
-            <Options/>
-        </Source>
         <Source name="ram_memory.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
