@@ -63,8 +63,8 @@ begin
              locked => clk_locked);
 
     picorv32 : entity work.picorv32(picorv32)
-               generic map(STACKADDR => X"0002_0000",
-                           PROGADDR_RESET => X"0001_0000",
+               generic map(STACKADDR => X"0000_0200",
+                           PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
                            COMPRESSED_ISA => 0,
@@ -108,8 +108,8 @@ begin
                     resetn => resetn);
                     
     ram : entity work.ram_memory(rtl)
-          generic map(SIZE => 32768)
-          port map(bus_addr => bus_addr(16 downto 0),
+          generic map(SIZE => 512)
+          port map(bus_addr => bus_addr(10 downto 0),
                    bus_wdata => bus_wdata,
                    bus_rdata => ram_bus_rdata,
                    bus_wstrb => bus_wstrb,
@@ -128,10 +128,10 @@ begin
         ram_cs <= '0';
     
         if (bus_valid = '1') then
-            if (bus_addr(31 downto 24) = X"00") then
+            if (bus_addr(31 downto 16) = X"0000") then
                 bus_rdata <= ram_bus_rdata;
                 ram_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"01") then
+            elsif (bus_addr(31 downto 16) = X"0001") then
                 bus_rdata <= gpio_bus_rdata;
                 gpio_cs <= '1';
             end if;

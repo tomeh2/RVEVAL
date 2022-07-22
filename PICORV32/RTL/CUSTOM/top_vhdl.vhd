@@ -36,7 +36,7 @@ begin
 
     picorv32 : entity work.picorv32(picorv32)
                generic map(STACKADDR => X"0002_0000",
-                           PROGADDR_RESET => X"0001_0000",
+                           PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
                            COMPRESSED_ISA => 0,
