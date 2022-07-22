@@ -1,1 +1,0 @@
-@W: MT246 :"c:\lattice\picorv32\pll\clkgen\clkgen.v":60:12:60:20|Blackbox EHXPLLL is missing a user supplied timing model. This may have a negative effect on timing analysis and optimizations (Quality of Results)

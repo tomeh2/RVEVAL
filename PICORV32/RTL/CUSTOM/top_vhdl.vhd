@@ -1,51 +1,20 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity top_synth is
-    port(
-        SYSCLK_P : in std_logic;
-        SYSCLK_N : in std_logic;
-        
-        CPU_RESET : in std_logic;
-        
-        GPIO_SW_N : in std_logic;
-        GPIO_SW_S : in std_logic;
-        GPIO_SW_W : in std_logic;
-        GPIO_SW_E : in std_logic;
-        GPIO_SW_C : in std_logic;
-        
-        GPIO_DIP_SW0 : in std_logic;
-        GPIO_DIP_SW1 : in std_logic;
-        GPIO_DIP_SW2 : in std_logic;
-        GPIO_DIP_SW3 : in std_logic;
-        
-        GPIO_LED_0 : out std_logic;
-        GPIO_LED_1 : out std_logic;
-        GPIO_LED_2 : out std_logic;
-        GPIO_LED_3 : out std_logic
-        );
-end top_synth;
+entity top_vhdl is
+    
+end top_vhdl;
 
-architecture structural of top_synth is
-    component clk_wiz_1
-    port
-        (-- Clock in ports
-        -- Clock out ports
-        clk_out1          : out    std_logic;
-        -- Status and control signals
-        locked             : out     std_logic;
-        clk_in1_p           : in     std_logic;
-        clk_in1_n           : in     std_logic
-     );
-    end component;
-
+architecture structural of top_vhdl is
     signal bus_valid, bus_instr, bus_ready : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
     signal bus_wstrb : std_logic_vector(3 downto 0);
     
     signal irq : std_logic_vector(31 downto 0) := (others => '0');
     
-    signal clk, clk_locked, resetn : std_logic;
+    signal clk, resetn : std_logic;
+    
+    constant T : time := 20ns;
     
     signal gpio_bus_rdata : std_logic_vector(31 downto 0);
     signal gpio_bus_ready, gpio_cs : std_logic;
@@ -55,12 +24,15 @@ architecture structural of top_synth is
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
 begin
-    clk_wiz : clk_wiz_1
-    port map(clk_in1_p => SYSCLK_P,
-             clk_in1_n => SYSCLK_N,
-             
-             clk_out1 => clk,
-             locked => clk_locked);
+    process
+    begin
+        clk <= '0';
+        wait for T / 2;
+        clk <= '1';
+        wait for T / 2;
+    end process;
+    
+    resetn <= '0', '1' after T * 10;
 
     picorv32 : entity work.picorv32(picorv32)
                generic map(STACKADDR => X"0002_0000",
@@ -92,6 +64,17 @@ begin
                         
                         clk => clk,
                         resetn => resetn);
+    /*
+    rom : entity work.rom_memory(rtl)
+          generic map(SIZE => 128)
+          port map(bus_addr => bus_addr(8 downto 0),
+                   bus_rdata => rom_bus_rdata,
+                   bus_wstrb => bus_wstrb,
+                   bus_ready => rom_bus_ready,
+                   
+                   en => rom_cs,
+                   clk => clk,
+                   resetn => resetn);*/
 
     gpio : entity work.gpio_device(rtl)
            port map(gpio_i => gpio_i,
@@ -138,24 +121,7 @@ begin
         end if;
     end process;
 
-    resetn <= not CPU_RESET and clk_locked;
-     
-    gpio_i(0) <= GPIO_SW_N;
-    gpio_i(1) <= GPIO_SW_S;
-    gpio_i(2) <= GPIO_SW_W;
-    gpio_i(3) <= GPIO_SW_E;
-    gpio_i(4) <= GPIO_SW_C;
-    
-    gpio_i(5) <= GPIO_DIP_SW0;
-    gpio_i(6) <= GPIO_DIP_SW1;
-    gpio_i(7) <= GPIO_DIP_SW2;
-    gpio_i(8) <= GPIO_DIP_SW3;
-    
-    GPIO_LED_0 <= gpio_o(0);
-    GPIO_LED_1 <= gpio_o(1);
-    GPIO_LED_2 <= gpio_o(2);
-    GPIO_LED_3 <= gpio_o(3);
-    
+    gpio_i <= X"1111_1111";
     bus_ready <= gpio_bus_ready or ram_bus_ready;
 
 end structural;

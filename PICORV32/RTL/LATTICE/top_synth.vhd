@@ -13,7 +13,7 @@ entity top_synth is
 end top_synth;
 
 architecture structural of top_synth is
-	component clkgen
+	component pll_1
 		port(
 			CLKI : in std_logic;
 			CLKOP : out std_logic;
@@ -103,7 +103,7 @@ architecture structural of top_synth is
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
 begin
-	clkgen_inst : clkgen
+	clkgen_inst : pll_1
 				  port map(CLKI => clk_25mhz,
 						    CLKOP => clk,
 						    CLKOS => open,

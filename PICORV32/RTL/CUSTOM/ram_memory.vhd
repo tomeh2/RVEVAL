@@ -33,7 +33,7 @@ architecture rtl of ram_memory is
     type ram_type is array (0 to SIZE - 1) of std_logic_vector(NB_COL * COL_WIDTH - 1 downto 0);
 
     impure function init_ram_hex return ram_type is
-        file text_file : text open read_mode is "c:/mem_vhdl.hex";
+        file text_file : text open read_mode is "../../../SRC/executable.hex";
         variable text_line : line;
         variable ram_content : ram_type;
         variable temp : std_logic_vector(31 downto 0);
@@ -41,11 +41,11 @@ architecture rtl of ram_memory is
             for i in 0 to SIZE - 1 loop
                 readline(text_file, text_line);
                 hread(text_line, temp);
-                /*
-                for j in 0 to 3 loop
+
+                --ram_content(i) := temp;
+				for j in 0 to 3 loop
                     ram_content(i)(8 * (j + 1) - 1 downto 8 * j) := temp(8 * (4 - j) - 1 downto 8 * (3 - j));
-                end loop;*/
-                ram_content(i) := temp;
+                end loop;
             end loop;    
  
         return ram_content;

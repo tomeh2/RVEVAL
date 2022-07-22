@@ -1,13 +1,17 @@
-**/XILINX/*
-**/LATTICE/*
+NEORV32/RTL/LATTICE/*
+!NEORV32/RTL/LATTICE/neoRV32.ldf
+!NEORV32/RTL/LATTICE/neorv32_test_setup_bootloader.vhd
+!NEORV32/RTL/LATTICE/pll/pll_1/pll_1.v
 
-!**/LATTICE/pll/pll_1/pll_1.v
+NEORV32/RTL/XILINX/*
+!NEORV32/RTL/XILINX/NeoRV32.xpr
+!NEORV32/RTL/LATTICE/neorv32_test_setup_bootloader.vhd
 
-!*.vhd
-!*.v
+PICORV32/RTL/LATTICE/*
+!PICORV32/RTL/LATTICE/picoRV32.ldf
+!PICORV32/RTL/LATTICE/top_synth.vhd
+!PICORV32/RTL/LATTICE/pll/pll_1/pll_1.v
 
-!**/XILINX/*.xpr
-!**/XILINX/*.xdc
-
-!**/LATTICE/*.ldf
-!**/LATTICE/*.lpf
+PICORV32/RTL/XILINX/*
+!PICORV32/RTL/XILINX/picoRV32.xpr
+!PICORV32/RTL/LATTICE/top_synth.vhd
