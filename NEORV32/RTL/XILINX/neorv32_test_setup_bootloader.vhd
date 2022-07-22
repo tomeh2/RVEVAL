@@ -75,10 +75,12 @@ port
   -- Clock out ports
   clk_out1          : out    std_logic;
   clk_in1_p         : in     std_logic;
-  clk_in1_n         : in     std_logic
+  clk_in1_n         : in     std_logic;
+  
+  locked : out std_logic
  );
 end component;
-    signal clk_i, clk_2, rstn_i, uart_rx, uart_tx : std_logic;
+    signal clk_i, clk_2, rstn_i, uart_rx, uart_tx, clk_locked : std_logic;
 begin
     your_instance_name : clk_wiz_0
    port map ( 
@@ -86,9 +88,11 @@ begin
    clk_out1 => clk_i,
    -- Clock in ports
    clk_in1_p => SYSCLK_P,
-   clk_in1_n => SYSCLK_N
+   clk_in1_n => SYSCLK_N,
+   
+   locked => clk_locked
  );
-    rstn_i <= not GPIO_SW_C; 
+    rstn_i <= not GPIO_SW_C and clk_locked; 
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   neorv32_top_inst: neorv32_top

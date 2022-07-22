@@ -1,3 +1,8 @@
+create_clock -period 5.000 [get_ports clk_in1_p]
+set_input_jitter [get_clocks -of_objects [get_ports clk_in1_p]] 0.050
+set_property PHASESHIFT_MODE WAVEFORM [get_cells -hierarchical *adv*]
+
+
 set_property PACKAGE_PIN AB22 [get_ports No]
 set_property IOSTANDARD LVCMOS25 [get_ports No]
 set_property PACKAGE_PIN AE25 [get_ports FMC1_HPC_HA02_P]
