@@ -1,2 +1,0 @@
-@W: CL168 :"C:\lattice\neorv32\clkwiz\pll25m\pll25m.vhd":53:4:53:17|Removing instance scuba_vhi_inst because it does not drive other instances. To preserve this instance, use the syn_noprune synthesis directive.
-

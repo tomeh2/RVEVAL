@@ -63,7 +63,7 @@ end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
 
-	component pll25m
+	component pll_1
     port (CLKI: in  std_logic; CLKOP: out  std_logic; 
         CLKOS: out  std_logic; CLKOS2: out  std_logic; 
         CLKOS3: out  std_logic; LOCK: out  std_logic);
@@ -78,8 +78,8 @@ end component;
 begin
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-	pll_inst : pll25m
-    port map (CLKI=>clk_25mhz, CLKOP=>open, CLKOS=>clk_i, CLKOS2=>open, CLKOS3=>open, 
+	pll_inst : pll_1
+    port map (CLKI=>clk_25mhz, CLKOP=>open, CLKOS=>open, CLKOS2=>clk_i, CLKOS3=>open, 
         LOCK=>clk_lock);
   
   neorv32_top_inst: neorv32_top

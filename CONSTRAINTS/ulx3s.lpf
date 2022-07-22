@@ -1,5 +1,3 @@
-BLOCK RESETPATHS;
-BLOCK ASYNCPATHS;
 ## ULX3S v2.x.x and v3.0.x
 
 # The clock "usb" and "gpdi" sheet

@@ -1,2 +1,0 @@
-VHDL_ENTITY_ONLY pll25m DEFIN pll25m.vhd
-MODULE pll25m DEFIN pll25m.vhd

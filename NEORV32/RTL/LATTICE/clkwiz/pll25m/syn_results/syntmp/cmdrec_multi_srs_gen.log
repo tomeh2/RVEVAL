@@ -1,7 +1,0 @@
-C:\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe  -link  -top  pll25m  -multisrs  C:\lattice\neorv32\clkwiz\pll25m\syn_results\synwork\pll25m_comp.srs  -osyn  C:\lattice\neorv32\clkwiz\pll25m\syn_results\synwork\pll25m_mult.srs  -log  C:\lattice\neorv32\clkwiz\pll25m\syn_results\synlog\pll25m_multi_srs_gen.srr 
-relcom:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe -link -top pll25m -multisrs ..\synwork\pll25m_comp.srs -osyn ..\synwork\pll25m_mult.srs -log ..\synlog\pll25m_multi_srs_gen.srr
-rc:0 success:1 runtime:0
-file:..\synwork\pll25m_comp.srs|io:i|time:1658142636|size:5012|exec:0|csum:AACA7000545EE98BF9B4EB3DC0B7A4C6
-file:..\synwork\pll25m_mult.srs|io:o|time:1658142637|size:4755|exec:0|csum:
-file:..\synlog\pll25m_multi_srs_gen.srr|io:o|time:1658142637|size:1042|exec:0|csum:
-file:..\..\..\..\..\..\diamond\diamond\3.11_x64\synpbase\bin64\syn_nfilter.exe|io:i|time:1554103352|size:8734720|exec:1|csum:0A206A5298321BBDD627E7975EAE3EC2

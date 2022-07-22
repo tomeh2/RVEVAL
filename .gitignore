@@ -1,6 +1,11 @@
 **/XILINX/*
+**/LATTICE/*
+
+!*.vhd
+!*.v
 
 !**/XILINX/*.xpr
 !**/XILINX/*.xdc
-!**/XILINX/*.vhd
 
+!**/LATTICE/*.ldf
+!**/LATTICE/*.lpf

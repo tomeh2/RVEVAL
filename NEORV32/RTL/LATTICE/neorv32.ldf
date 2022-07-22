@@ -1,149 +1,152 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="neorv32" device="LFE5U-45F-6BG381C" default_implementation="impl">
+<BaliProject version="3.2" title="neoRV32" device="LFE5U-45F-6BG381C" default_implementation="impl">
     <Options/>
     <Implementation title="impl" dir="impl" description="impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options/>
-        <Source name="impl/source/neorv32_package.vhd" type="VHDL" type_short="VHDL">
+        <Options def_top="neorv32.neorv32_test_setup_approm" top="neorv32_test_setup_bootloader"/>
+        <Source name="neorv32_test_setup_bootloader.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="work" top_module="neorv32_test_setup_bootloader"/>
+        </Source>
+        <Source name="../NEORV32/neorv32_application_image.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_application_image.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_boot_rom.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_bootloader_image.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_bootloader_image.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_imem.entity.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_bus_keeper.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_dmem.entity.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_busswitch.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_top.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cfs.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_test_setup_bootloader.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_alu.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_control.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_bus.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_dmem.default.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_control.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_dmem.legacy.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_cp_bitmanip.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_imem.default.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_cp_cfu.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_imem.legacy.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_cp_fpu.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_boot_rom.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_cp_muldiv.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_bus_keeper.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_cp_shifter.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_busswitch.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_decompressor.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cfs.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_cpu_regfile.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_alu.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_debug_dm.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_bus.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_debug_dtm.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_cp_bitmanip.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_dmem.default.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_cp_cfu.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_dmem.entity.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_cp_fpu.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_dmem.legacy.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_cp_muldiv.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_fifo.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_cp_shifter.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_gpio.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_decompressor.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_gptmr.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_cpu_regfile.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_icache.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_debug_dm.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_imem.default.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_debug_dtm.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_imem.entity.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_fifo.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_imem.legacy.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_gpio.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_mtime.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_gptmr.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_neoled.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_icache.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_package.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_mtime.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_pwm.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_neoled.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_slink.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_pwm.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_spi.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_slink.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_sysinfo.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_spi.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_test_setup_approm.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_sysinfo.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_top.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_trng.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_trng.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_twi.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_twi.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_uart.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_uart.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_wdt.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_wdt.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_wishbone.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_wishbone.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_xip.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_xip.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="impl/source/neorv32_xirq.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../NEORV32/neorv32_xirq.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="clkwiz/pll25m/pll25m.vhd" type="VHDL" type_short="VHDL">
+        <Source name="pll/pll_1/pll_1.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="neorv32.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="../../../CONSTRAINTS/ulx3s.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>
-    <Strategy name="Strategy1" file="neorv321.sty"/>
+    <Strategy name="Strategy1" file="neoRV321.sty"/>
 </BaliProject>

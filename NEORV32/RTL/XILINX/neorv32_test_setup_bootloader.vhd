@@ -74,7 +74,6 @@ port
  (-- Clock in ports
   -- Clock out ports
   clk_out1          : out    std_logic;
-  clk_out2          : out    std_logic;
   clk_in1_p         : in     std_logic;
   clk_in1_n         : in     std_logic
  );
@@ -85,7 +84,6 @@ begin
    port map ( 
   -- Clock out ports  
    clk_out1 => clk_i,
-   clk_out2 => clk_2,
    -- Clock in ports
    clk_in1_p => SYSCLK_P,
    clk_in1_n => SYSCLK_N
