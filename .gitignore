@@ -1,6 +1,8 @@
 **/XILINX/*
 **/LATTICE/*
 
+!**/LATTICE/pll/pll_1/pll_1.v
+
 !*.vhd
 !*.v
 
