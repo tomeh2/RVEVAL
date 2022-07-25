@@ -23,6 +23,22 @@ architecture structural of top_vhdl is
     signal ram_bus_ready, ram_cs : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
+	
+	component ram_simulation
+	port(
+		bus_valid : in std_logic;
+		bus_ready : out std_logic;
+		
+		bus_addr : in std_logic_vector(31 downto 0);
+		bus_wdata : in std_logic_vector(31 downto 0);
+		bus_rdata : out std_logic_vector(31 downto 0);
+		bus_wstrb : in std_logic_vector(3 downto 0);
+		
+		clk : in std_logic;
+		en : in std_logic;
+		resetn : in std_logic
+	);
+	end component;
 begin
     process
     begin
@@ -64,17 +80,17 @@ begin
                         
                         clk => clk,
                         resetn => resetn);
-    /*
-    rom : entity work.rom_memory(rtl)
-          generic map(SIZE => 128)
-          port map(bus_addr => bus_addr(8 downto 0),
-                   bus_rdata => rom_bus_rdata,
-                   bus_wstrb => bus_wstrb,
-                   bus_ready => rom_bus_ready,
+    
+    --rom : entity work.rom_memory(rtl)
+    --      generic map(SIZE => 128)
+    --      port map(bus_addr => bus_addr(8 downto 0),
+    --               bus_rdata => rom_bus_rdata,
+    --               bus_wstrb => bus_wstrb,
+    --               bus_ready => rom_bus_ready,
                    
-                   en => rom_cs,
-                   clk => clk,
-                   resetn => resetn);*/
+    --               en => rom_cs,
+    --               clk => clk,
+    --               resetn => resetn);
 
     gpio : entity work.gpio_device(rtl)
            port map(gpio_i => gpio_i,
@@ -104,7 +120,7 @@ begin
            
 
     -- ADDRESS DECODING
-    process(all)
+    process(bus_valid, bus_addr, ram_bus_rdata, gpio_bus_rdata)
     begin
         bus_rdata <= (others => '0');
         gpio_cs <= '0';
