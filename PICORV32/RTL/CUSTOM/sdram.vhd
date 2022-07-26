@@ -437,7 +437,7 @@ begin
       (others => '0') when others;
 
   -- decode the next 16-bit word from the write buffer
-  sdram_dq <= data_reg((BURST_LENGTH-wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-wait_counter-1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
+  sdram_dq <= data_reg((BURST_LENGTH - 1)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-2)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
 
   -- set SDRAM data mask
   sdram_dqmh <= '0';

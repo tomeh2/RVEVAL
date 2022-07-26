@@ -24,7 +24,7 @@ architecture structural of top_vhdl is
     signal rom_bus_ready, rom_cs : std_logic;
     
     signal sdram_bus_rdata : std_logic_vector(31 downto 0);
-    signal sdram_bus_ready, sdram_cs, sdram_ack : std_logic;
+    signal sdram_bus_ready, sdram_valid, sdram_cs, sdram_ack : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
     
@@ -147,7 +147,7 @@ begin
                                 we => sdram_we,
                                 req => sdram_cs,
                                 ack => sdram_ack,
-                                valid => sdram_bus_ready,
+                                valid => sdram_valid,
                                 q => sdram_bus_rdata,
                                 
                                 sdram_a => sdram_a,
@@ -210,8 +210,10 @@ begin
     end process;
 
     gpio_i <= X"1111_1111";
-    bus_ready <= gpio_bus_ready or sdram_bus_ready or rom_bus_ready;
+    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready;
     
-    sdram_we <= '1' when bus_wstrb = "0000" else '0'; 
+    sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
+    
+    sdram_we <= '1' when bus_wstrb /= "0000" else '0'; 
 
 end structural;
