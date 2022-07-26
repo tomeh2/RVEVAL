@@ -120,6 +120,7 @@ architecture structural of top_synth is
 begin
 	sdram_clk <= clk_sdram;
 
+	-- SDRAM clock is also 50 MHz but phase shifted by 90 degrees
 	clkgen_inst : pll_sdram_1
 				  port map(CLKI => clk_25mhz,
 						    CLKOP => clk,
