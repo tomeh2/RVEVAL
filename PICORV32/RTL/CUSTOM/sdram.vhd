@@ -71,12 +71,12 @@ entity sdram is
     --
     -- These values can be adjusted to match the exact timing of your SDRAM
     -- chip (refer to the datasheet).
-    T_DESL : real := 200000.0; -- startup delay
+    T_DESL : real := 2000.0; -- startup delay
     T_MRD  : real :=     12.0; -- mode register cycle time
     T_RC   : real :=     60.0; -- row cycle time
     T_RCD  : real :=     18.0; -- RAS to CAS delay
     T_RP   : real :=     18.0; -- precharge to activate delay
-    T_WR   : real :=     12.0; -- write recovery time
+    T_WR   : real :=     15.0; -- write recovery time
     T_REFI : real :=   7800.0  -- average refresh interval
   );
   port (
