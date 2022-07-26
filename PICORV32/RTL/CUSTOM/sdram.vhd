@@ -62,7 +62,7 @@ entity sdram is
 
     -- The delay in clock cycles, between the start of a read command and the
     -- availability of the output data.
-    CAS_LATENCY : natural := 3; -- 2=below 133MHz, 3=above 133MHz
+    CAS_LATENCY : natural := 2; -- 2=below 133MHz, 3=above 133MHz
 
     -- The number of 16-bit words to be bursted during a read/write.
     BURST_LENGTH : natural := 2;
@@ -71,13 +71,13 @@ entity sdram is
     --
     -- These values can be adjusted to match the exact timing of your SDRAM
     -- chip (refer to the datasheet).
-    T_DESL : real := 20000.0; -- startup delay
-    T_MRD  : real :=     50.0; -- mode register cycle time
-    T_RC   : real :=     100.0; -- row cycle time
-    T_RCD  : real :=     50.0; -- RAS to CAS delay
-    T_RP   : real :=     50.0; -- precharge to activate delay
-    T_WR   : real :=     50.0; -- write recovery time
-    T_REFI : real :=   10000.0  -- average refresh interval
+    T_DESL : real := 100000.0; -- startup delay
+    T_MRD  : real :=     100.0; -- mode register cycle time
+    T_RC   : real :=     200.0; -- row cycle time
+    T_RCD  : real :=     100.0; -- RAS to CAS delay
+    T_RP   : real :=     100.0; -- precharge to activate delay
+    T_WR   : real :=     100.0; -- write recovery time
+    T_REFI : real :=   5000.0  -- average refresh interval
   );
   port (
     -- reset

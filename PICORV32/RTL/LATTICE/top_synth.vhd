@@ -1,5 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 entity top_synth is
     port(
@@ -8,18 +9,27 @@ entity top_synth is
         btn : in std_logic_vector(6 downto 0);
         sw : in std_logic_vector(3 downto 0);
 		
-        led : out std_logic_vector(7 downto 0)
+        led : out std_logic_vector(7 downto 0);
+		
+		sdram_clk : out std_logic;
+		sdram_a : out unsigned(12 downto 0);
+		sdram_ba : out unsigned(1 downto 0);
+		sdram_d : inout std_logic_vector(15 downto 0);
+		sdram_cke : out std_logic;
+		sdram_csn : out std_logic;
+		sdram_rasn : out std_logic;
+		sdram_casn : out std_logic;
+		sdram_wen : out std_logic;
+		sdram_dqm : out std_logic_vector(1 downto 0)
         );
 end top_synth;
 
 architecture structural of top_synth is
-	component pll_1
+	component pll_sdram_1
 		port(
 			CLKI : in std_logic;
 			CLKOP : out std_logic;
-			CLKOS : out std_logic;
-			CLKOS2 : out std_logic;
-			CLKOS3 : out std_logic
+			CLKOS : out std_logic
 		);
 	end component;
 
@@ -93,22 +103,27 @@ architecture structural of top_synth is
     
     signal irq : std_logic_vector(31 downto 0) := (others => '0');
     
-    signal clk, resetn : std_logic;
+    signal clk, clk_sdram, resetn, reset : std_logic;
     
     signal gpio_bus_rdata : std_logic_vector(31 downto 0);
     signal gpio_bus_ready, gpio_cs : std_logic;
     
-    signal ram_bus_rdata : std_logic_vector(31 downto 0);
-    signal ram_bus_ready, ram_cs : std_logic;
+    signal rom_bus_rdata : std_logic_vector(31 downto 0);
+    signal rom_bus_ready, rom_cs : std_logic;
+	
+	signal sdram_bus_rdata : std_logic_vector(31 downto 0);
+    signal sdram_bus_ready, sdram_valid, sdram_cs, sdram_ack, sdram_we : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
+	
+
 begin
-	clkgen_inst : pll_1
+	sdram_clk <= clk_sdram;
+
+	clkgen_inst : pll_sdram_1
 				  port map(CLKI => clk_25mhz,
 						    CLKOP => clk,
-						    CLKOS => open,
-						    CLKOS2 => open,
-						    CLKOS3 => open);
+						    CLKOS => clk_sdram);
 							
 	picorv32_inst : picorv32
                port map(mem_valid => bus_valid,
@@ -145,36 +160,64 @@ begin
                     clk => clk,
                     resetn => resetn);
                     
-    ram : entity work.ram_memory(rtl)
+    rom : entity work.ram_memory(rtl)
           generic map(SIZE => 1024)
           port map(bus_addr => bus_addr(11 downto 0),
                    bus_wdata => bus_wdata,
-                   bus_rdata => ram_bus_rdata,
+                   bus_rdata => rom_bus_rdata,
                    bus_wstrb => bus_wstrb,
-                   bus_ready => ram_bus_ready,
+                   bus_ready => rom_bus_ready,
                    
-                   en => ram_cs,
+                   en => rom_cs,
                    clk => clk,
                    resetn => resetn);
+				   
+	sdram_controller : entity work.sdram(arch)
+                       generic map(CLK_FREQ => 50.0)
+                       port map(reset => reset,
+                                clk => clk,
+                                addr => unsigned(bus_addr(22 downto 0)),
+                                data => bus_wdata,
+                                we => sdram_we,
+                                req => sdram_cs,
+                                ack => sdram_ack,
+                                valid => sdram_valid,
+                                q => sdram_bus_rdata,
+                                
+                                sdram_a => sdram_a,
+                                sdram_ba => sdram_ba,
+                                sdram_dq => sdram_d,
+                                sdram_cke => sdram_cke,
+                                sdram_cs_n => sdram_csn,
+                                sdram_ras_n => sdram_rasn,
+                                sdram_cas_n => sdram_casn,
+                                sdram_we_n => sdram_wen,
+                                sdram_dqml => sdram_dqm(0),
+                                sdram_dqmh => sdram_dqm(1));
            
 
     -- ADDRESS DECODING
-    process(all)
+    process(bus_valid, bus_addr, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata)
     begin
         bus_rdata <= (others => '0');
         gpio_cs <= '0';
-        ram_cs <= '0';
+        rom_cs <= '0';
+        sdram_cs <= '0';
     
         if (bus_valid = '1') then
-            if (bus_addr(31 downto 16) = X"0000") then
-                bus_rdata <= ram_bus_rdata;
-                ram_cs <= '1';
-            elsif (bus_addr(31 downto 16) = X"0001") then
+            if (bus_addr(31 downto 24) = X"00") then
+                bus_rdata <= rom_bus_rdata;
+                rom_cs <= '1';
+            elsif (bus_addr(31 downto 24) = X"01") then
                 bus_rdata <= gpio_bus_rdata;
                 gpio_cs <= '1';
+            elsif (bus_addr(31 downto 24) = X"02") then
+                bus_rdata <= sdram_bus_rdata;
+                sdram_cs <= '1';
             end if;
         end if;
     end process;
+
 
     resetn <= btn(0);
      
@@ -183,6 +226,12 @@ begin
     
     led <= gpio_o(7 downto 0);
     
-    bus_ready <= gpio_bus_ready or ram_bus_ready;
+    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready;
+	
+	sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
+    
+    sdram_we <= '1' when bus_wstrb /= "0000" else '0'; 
+	
+	reset <= not resetn;
 
 end structural;
