@@ -24,7 +24,7 @@ architecture structural of top_vhdl is
     signal rom_bus_ready, rom_cs : std_logic;
     
     signal sdram_bus_rdata : std_logic_vector(31 downto 0);
-    signal sdram_bus_ready, sdram_cs : std_logic;
+    signal sdram_bus_ready, sdram_cs, sdram_ack : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
     
@@ -83,7 +83,7 @@ begin
     reset <= not resetn;
 
     picorv32 : entity work.picorv32(picorv32)
-               generic map(STACKADDR => X"0002_0000",
+               generic map(STACKADDR => X"0000_0200",
                            PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
@@ -139,14 +139,14 @@ begin
                     resetn => resetn);
                     
     sdram_controller : entity work.sdram(arch)
-                       generic map(CLK_FREQ => 50000000.0)
+                       generic map(CLK_FREQ => 50.0)
                        port map(reset => reset,
                                 clk => clk,
                                 addr => unsigned(bus_addr(22 downto 0)),
                                 data => bus_wdata,
                                 we => sdram_we,
                                 req => sdram_cs,
-                                ack => open,
+                                ack => sdram_ack,
                                 valid => sdram_bus_ready,
                                 q => sdram_bus_rdata,
                                 
@@ -163,7 +163,7 @@ begin
                     
     rom : entity work.ram_memory(rtl)
           generic map(SIZE => 1024)
-          port map(bus_addr => bus_addr(9 downto 0),
+          port map(bus_addr => bus_addr(11 downto 0),
                    bus_wdata => bus_wdata,
                    bus_rdata => rom_bus_rdata,
                    bus_wstrb => bus_wstrb,
