@@ -233,7 +233,7 @@ begin
     sdram_dqm <= sdram_dqmh & sdram_dqml;
 
     -- ADDRESS DECODING
-    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do)
+    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
     begin
         bus_rdata <= (others => '0');
         gpio_cs <= '0';
@@ -260,6 +260,7 @@ begin
                         bus_rdata <= uart_reg_div_do;
                     else
                         uart_reg_div_we <= "1111";
+                        uart_bus_ready <= '1';
                     end if;
                 elsif (bus_addr(23 downto 0) = X"000004") then
                     uart_reg_dat_we <= '1';
