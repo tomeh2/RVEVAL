@@ -436,8 +436,21 @@ begin
       "0010" & col    when WRITE,  -- auto precharge
       (others => '0') when others;
 
+	process(state, wait_counter)
+	begin
+		if (state = WRITE) then
+			if (wait_counter = 0) then
+				sdram_dq <= data_reg((BURST_LENGTH)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH - 1)*SDRAM_DATA_WIDTH);
+			else
+				sdram_dq <= data_reg((BURST_LENGTH - 1)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH - 2)*SDRAM_DATA_WIDTH);
+			end if;
+		else
+			sdram_dq <= (others => 'Z');
+		end if;
+	end process;
+
   -- decode the next 16-bit word from the write buffer
-  sdram_dq <= data_reg((BURST_LENGTH - 1)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-2)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
+  --sdram_dq <= data_reg((BURST_LENGTH - wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH - wait_counter - 1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
 
   -- set SDRAM data mask
   sdram_dqmh <= '0';
