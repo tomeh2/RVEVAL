@@ -13,7 +13,11 @@ architecture structural of top_vhdl is
     
     signal irq : std_logic_vector(31 downto 0) := (others => '0');
     
-    signal clk, resetn, reset, sdram_we : std_logic;
+    signal clk, resetn, reset, sdram_we, ser_tx, ser_rx : std_logic;
+    
+    signal uart_reg_div_we : std_logic_vector(3 downto 0);
+    signal uart_reg_div_di, uart_reg_div_do, uart_reg_dat_di, uart_reg_dat_do : std_logic_vector(31 downto 0);
+    signal uart_reg_dat_we, uart_reg_dat_re, uart_reg_dat_wait, uart_bus_ready : std_logic;
     
     constant T : time := 20ns;
     
@@ -69,6 +73,27 @@ architecture structural of top_vhdl is
 	   Clk : in std_logic;
 	   Dqm : in std_logic_vector(1 downto 0)
 	);
+	end component;
+	
+	component simpleuart
+		port(
+			clk : in std_logic;
+			resetn : in std_logic;
+			
+			ser_tx : out std_logic;
+			ser_rx : in std_logic;
+			
+			reg_div_we : in std_logic_vector(3 downto 0);
+			reg_div_di : in std_logic_vector(31 downto 0);
+			reg_div_do : out std_logic_vector(31 downto 0);
+			
+			reg_dat_we : in std_logic;
+			reg_dat_re : in std_logic;
+			
+			reg_dat_di : in std_logic_vector(31 downto 0);
+			reg_dat_do : out std_logic_vector(31 downto 0);
+			reg_dat_wait : out std_logic
+		);
 	end component;
 begin
     process
@@ -185,16 +210,40 @@ begin
                                  We_n => sdram_we_n,
                                  Dqm => sdram_dqm);
 
+    uart : simpleuart
+           port map(clk => clk,
+                    resetn => resetn,
+                    
+                    ser_tx => ser_tx,
+                    ser_rx => ser_rx,
+                    
+                    reg_div_we => uart_reg_div_we,
+                    reg_div_di => bus_wdata,
+                    reg_div_do => uart_reg_div_do,
+                    
+                    reg_dat_we => uart_reg_dat_we,
+                    reg_dat_re => uart_reg_dat_re,
+                    
+                    reg_dat_di => bus_wdata,
+                    reg_dat_do => uart_reg_dat_do,
+                    
+                    reg_dat_wait => uart_reg_dat_wait
+                    );
+
     sdram_dqm <= sdram_dqmh & sdram_dqml;
 
     -- ADDRESS DECODING
-    process(bus_valid, bus_addr, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata)
+    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do)
     begin
         bus_rdata <= (others => '0');
         gpio_cs <= '0';
         rom_cs <= '0';
         sdram_cs <= '0';
     
+        uart_reg_div_we <= (others => '0');
+        uart_reg_dat_we <= '0';
+        uart_reg_dat_re <= '0';
+        uart_bus_ready <= '0';
         if (bus_valid = '1') then
             if (bus_addr(31 downto 24) = X"00") then
                 bus_rdata <= rom_bus_rdata;
@@ -205,12 +254,27 @@ begin
             elsif (bus_addr(31 downto 24) = X"02") then
                 bus_rdata <= sdram_bus_rdata;
                 sdram_cs <= '1';
+            elsif (bus_addr(31 downto 24) = X"03") then
+                if (bus_addr(23 downto 0) = X"000000") then
+                    if (bus_wstrb = "0000") then
+                        bus_rdata <= uart_reg_div_do;
+                    else
+                        uart_reg_div_we <= "1111";
+                    end if;
+                elsif (bus_addr(23 downto 0) = X"000004") then
+                    uart_reg_dat_we <= '1';
+                    uart_bus_ready <= not uart_reg_dat_wait;
+                elsif (bus_addr(23 downto 0) = X"000008") then
+                    bus_rdata <= uart_reg_dat_do;
+                    uart_reg_dat_re <= '1';
+                    uart_bus_ready <= not uart_reg_dat_wait;
+                end if;
             end if;
         end if;
     end process;
 
     gpio_i <= X"1111_1111";
-    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready;
+    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready;
     
     sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
     

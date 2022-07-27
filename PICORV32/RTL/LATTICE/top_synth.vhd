@@ -96,6 +96,27 @@ architecture structural of top_synth is
 			resetn : in std_logic
 		);
 	end component;
+	
+	component simpleuart
+		port(
+			clk : in std_logic;
+			resetn : in std_logic;
+			
+			ser_tx : out std_logic;
+			ser_rx : in std_logic;
+			
+			reg_div_we : in std_logic_vector(3 downto 0);
+			reg_div_di : in std_logic_vector(31 downto 0);
+			reg_div_do : out std_logic_vector(31 downto 0);
+			
+			reg_dat_we : in std_logic;
+			reg_dat_re : in std_logic;
+			
+			reg_dat_di : in std_logic_vector(31 downto 0);
+			reg_dat_do : in std_logic_vector(31 downto 0);
+			reg_dat_wait : out std_logic
+		);
+	end component;
 
     signal bus_valid, bus_instr, bus_ready : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
