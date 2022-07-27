@@ -60,8 +60,8 @@
  ***************************************************************/
 
 module picorv32 #(
-	parameter [ 0:0] ENABLE_COUNTERS = 1,
-	parameter [ 0:0] ENABLE_COUNTERS64 = 1,
+	parameter [ 0:0] ENABLE_COUNTERS = 0,
+	parameter [ 0:0] ENABLE_COUNTERS64 = 0,
 	parameter [ 0:0] ENABLE_REGS_16_31 = 1,
 	parameter [ 0:0] ENABLE_REGS_DUALPORT = 1,
 	parameter [ 0:0] LATCHED_MEM_RDATA = 0,

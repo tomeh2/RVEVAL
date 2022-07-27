@@ -84,7 +84,7 @@ begin
             if (resetn = '0') then
                 bus_ready_i <= '0';
             else
-                bus_ready_i <= cs and not bus_ready_i;
+                bus_ready_i <= cs;
             end if;
         end if;
     end process;
