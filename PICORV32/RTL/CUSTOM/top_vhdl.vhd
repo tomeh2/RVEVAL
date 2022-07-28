@@ -108,7 +108,7 @@ begin
     reset <= not resetn;
 
     picorv32 : entity work.picorv32(picorv32)
-               generic map(STACKADDR => X"0000_0200",
+               generic map(STACKADDR => X"0000_1000",
                            PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
