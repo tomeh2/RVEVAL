@@ -1,6 +1,6 @@
 #define CLK_SPEED 50000000
 #define BAUD_RATE 19200
-#define SDRAM_SIZE 128
+#define SDRAM_SIZE 1024
 
 volatile unsigned int* uart_div_reg = (unsigned int*) 0x3000000;
 volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x3000004;
@@ -14,6 +14,17 @@ char str1[32] = "Initializing SDRAM...\n";
 char str2[32] = "Initialization done!\n";
 char str3[32] = "Starting check...\n";
 char str4[48] = "SDRAM check finished with no errors!\n";
+
+char hexMap[16] = "0123456789ABCDEF";
+
+void format_hex(unsigned int num, char* dest)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		*(dest + 7 - i) = *(hexMap + (num & 0x0000000F));
+		num >>= 4;
+	}
+}
 
 void uart_init()
 {
@@ -48,14 +59,36 @@ void sdram_init()
 void sdram_check()
 {
 	uart_puts(str3);
+	
+	char expected[9];
+	char got[9];
+	
+	expected[8] = '\0';
+	got[8] = '\0';
+	unsigned int currVal = 0xFFFF0000;
 	for (int i = 0; i < SDRAM_SIZE; i++)
 	{
-		if (*(sdram + i) != (0xFFFF0000 + i))
+		unsigned int sdramReadVal = *(sdram + i);
+		
+		format_hex(currVal, expected);
+		format_hex(sdramReadVal, got);
+		uart_puts("Expected: ");
+		uart_puts(expected);
+		uart_puts(" | Got: ");
+		uart_puts(got);
+		
+		if (sdramReadVal != currVal)
 		{
 			uart_puts("SDRAM Error!\n");
 			
 			return;
 		}
+		else
+		{
+			uart_puts(" | OK\n");
+		}
+		
+		currVal++;
 	}
 	uart_puts(str4);
 }
@@ -81,7 +114,7 @@ int main()
 	}
 	
 	int i = 0;
-	while(i < 10)
+	while(i < 1)
 	{
 		for (volatile int j = 0; j < 100; j++);
 		

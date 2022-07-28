@@ -151,8 +151,8 @@ begin
 	-- SDRAM clock is also 50 MHz but phase shifted by 90 degrees
 	clkgen_inst : pll_sdram_1
 				  port map(CLKI => clk_25mhz,
-						    CLKOP => clk,
-						    CLKOS => clk_sdram);
+						    CLKOP => clk_sdram,
+						    CLKOS => clk);
 							
 	picorv32_inst : picorv32
                port map(mem_valid => bus_valid,

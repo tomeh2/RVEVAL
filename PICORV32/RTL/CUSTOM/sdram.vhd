@@ -380,7 +380,7 @@ begin
       if state = READ then
         if first_word = '1' then
           q_reg(31 downto 16) <= sdram_dq;
-        elsif read_done = '1' then
+        elsif (read_done = '1') then
           q_reg(15 downto 0) <= sdram_dq;
           valid <= '1';
         end if;
@@ -440,13 +440,11 @@ begin
 	begin
 		if (state = WRITE) then
 			if (wait_counter = 0) then
-				--sdram_dq <= data_reg((2)*SDRAM_DATA_WIDTH-1 downto (1)*SDRAM_DATA_WIDTH);
-				sdram_dq <= (others => '0');
+				sdram_dq <= data_reg((2)*SDRAM_DATA_WIDTH-1 downto (1)*SDRAM_DATA_WIDTH);
 			elsif (wait_counter = 1) then
-				--sdram_dq <= data_reg((1)*SDRAM_DATA_WIDTH-1 downto (0)*SDRAM_DATA_WIDTH);
-				sdram_dq <= (others => '1');
+				sdram_dq <= data_reg((1)*SDRAM_DATA_WIDTH-1 downto (0)*SDRAM_DATA_WIDTH);
 			else
-				sdram_dq <= (others => 'Z');
+				sdram_dq <= X"0303";
 			end if;
 		else
 			sdram_dq <= (others => 'Z');
