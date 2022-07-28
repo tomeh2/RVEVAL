@@ -440,9 +440,13 @@ begin
 	begin
 		if (state = WRITE) then
 			if (wait_counter = 0) then
-				sdram_dq <= data_reg((BURST_LENGTH)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH - 1)*SDRAM_DATA_WIDTH);
+				--sdram_dq <= data_reg((2)*SDRAM_DATA_WIDTH-1 downto (1)*SDRAM_DATA_WIDTH);
+				sdram_dq <= (others => '0');
+			elsif (wait_counter = 1) then
+				--sdram_dq <= data_reg((1)*SDRAM_DATA_WIDTH-1 downto (0)*SDRAM_DATA_WIDTH);
+				sdram_dq <= (others => '1');
 			else
-				sdram_dq <= data_reg((BURST_LENGTH - 1)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH - 2)*SDRAM_DATA_WIDTH);
+				sdram_dq <= (others => 'Z');
 			end if;
 		else
 			sdram_dq <= (others => 'Z');
