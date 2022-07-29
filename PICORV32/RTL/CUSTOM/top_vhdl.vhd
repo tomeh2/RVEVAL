@@ -28,7 +28,7 @@ architecture structural of top_vhdl is
     signal rom_bus_ready, rom_cs : std_logic;
     
     signal sdram_bus_rdata : std_logic_vector(31 downto 0);
-    signal sdram_bus_ready, sdram_valid, sdram_cs, sdram_ack : std_logic;
+    signal sdram_bus_ready, sdram_valid, sdram_cs_read, sdram_cs_write, sdram_cs, sdram_ack : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
     
@@ -43,6 +43,8 @@ architecture structural of top_vhdl is
     signal sdram_dqml : std_logic;
     signal sdram_dqmh : std_logic;
     signal sdram_dqm : std_logic_vector(1 downto 0);
+    
+    signal test_state : std_logic_vector(1 downto 0);
 	
 	component ram_simulation
 	port(
@@ -238,7 +240,8 @@ begin
         bus_rdata <= (others => '0');
         gpio_cs <= '0';
         rom_cs <= '0';
-        sdram_cs <= '0';
+        --sdram_cs <= '0';
+        sdram_cs_write <= '0';
     
         uart_reg_div_we <= (others => '0');
         uart_reg_dat_we <= '0';
@@ -253,7 +256,8 @@ begin
                 gpio_cs <= '1';
             elsif (bus_addr(31 downto 24) = X"02") then
                 bus_rdata <= sdram_bus_rdata;
-                sdram_cs <= '1';
+                sdram_cs_write <= '1';
+                --sdram_cs <= '1';
             elsif (bus_addr(31 downto 24) = X"03") then
                 if (bus_addr(23 downto 0) = X"000000") then
                     if (bus_wstrb = "0000") then
@@ -273,6 +277,61 @@ begin
             end if;
         end if;
     end process;
+    
+    sdram_cs_proc : process(clk)
+    begin
+        if (rising_edge(clk)) then
+            if (reset = '1') then
+                test_state <= "00";
+            else
+                if (test_state = "00") then
+                    if (bus_addr(31 downto 24) = X"02" and bus_valid = '1') then
+                        test_state <= "01";
+                    else
+                        test_state <= "00";
+                    end if;
+                elsif (test_state = "01") then
+                    if (sdram_ack = '1' and bus_wstrb = "0000") then
+                        test_state <= "10";
+                    elsif (sdram_ack = '1' and bus_wstrb /= "0000") then
+                        test_state <= "00";
+                    else
+                        test_state <= "01";
+                    end if;
+                else
+                    if (sdram_valid = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "10";
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
+    
+    sdram_cs_proc_2 : process(test_state)
+    begin
+        if (test_state = "00") then
+            sdram_cs_read <= '0';
+        elsif (test_state = "01") then
+            sdram_cs_read <= '1';
+        else
+            sdram_cs_read <= '0';
+        end if;
+    end process;
+    
+    sdram_cs_proc_3 : process(test_state, bus_wstrb, sdram_cs_read)
+    begin
+        if (test_state /= "00") then
+            if (bus_wstrb = "0000") then
+                sdram_cs <= sdram_cs_read;
+            else 
+                sdram_cs <= '1';
+            end if;
+        else
+            sdram_cs <= '0';
+        end if;
+    end process; 
 
     gpio_i <= X"1111_1111";
     bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready;
