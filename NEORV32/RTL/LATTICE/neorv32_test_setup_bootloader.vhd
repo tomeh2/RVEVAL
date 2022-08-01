@@ -54,6 +54,17 @@ entity neorv32_test_setup_bootloader is
     -- GPIO --
     led : out std_ulogic_vector(7 downto 0);
     
+	sdram_clk : out std_logic;
+	sdram_a : out unsigned(12 downto 0);
+	sdram_ba : out unsigned(1 downto 0);
+	sdram_d : inout std_logic_vector(15 downto 0);
+	sdram_cke : out std_logic;
+	sdram_csn : out std_logic;
+	sdram_rasn : out std_logic;
+	sdram_casn : out std_logic;
+	sdram_wen : out std_logic;
+	sdram_dqm : out std_logic_vector(1 downto 0);
+	
     --gpio_o      : out std_ulogic_vector(7 downto 0); -- parallel output
     -- UART0 --
     ftdi_rxd : out std_ulogic; -- UART0 send data
@@ -73,13 +84,23 @@ end component;
 	signal clk_lock : std_logic;
 
 	signal con_gpio_o : std_ulogic_vector(63 downto 0);
-	signal rstn_i : std_logic;
+	signal rstn_i, rst_i : std_logic;
 
+	signal wb_tag : std_ulogic_vector(2 downto 0);
+	signal wb_adr : std_ulogic_vector(31 downto 0);
+	signal wb_dat_i : std_ulogic_vector(31 downto 0);
+	signal wb_dat_o : std_ulogic_vector(31 downto 0);
+	signal wb_we_o : std_ulogic;
+	signal wb_sel_o : std_ulogic_vector(3 downto 0);
+	signal wb_stb_o : std_ulogic;
+	signal wb_cyc_o : std_ulogic;
+	signal wb_ack_i : std_ulogic;
+	signal wb_err_i : std_ulogic;
 begin
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
 	pll_inst : pll_1
-    port map (CLKI=>clk_25mhz, CLKOP=>open, CLKOS=>open, CLKOS2=>clk_i, CLKOS3=>open, 
+    port map (CLKI=>clk_25mhz, CLKOP=>clk_i, CLKOS=>open, CLKOS2=>open, CLKOS3=>open, 
         LOCK=>clk_lock);
   
   neorv32_top_inst: neorv32_top
@@ -95,6 +116,9 @@ begin
     -- Internal Instruction memory --
     MEM_INT_IMEM_EN              => true,              -- implement processor-internal instruction memory
     MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
+	-- External bus
+	MEM_EXT_EN 					  => true,
+	MEM_EXT_TIMEOUT				  => 1023,
     -- Internal Data memory --
     MEM_INT_DMEM_EN              => true,              -- implement processor-internal data memory
     MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
@@ -111,12 +135,48 @@ begin
     gpio_o      => con_gpio_o,  -- parallel output
     -- primary UART0 (available if IO_UART0_EN = true) --
     uart0_txd_o => ftdi_rxd, -- UART0 send data
-    uart0_rxd_i =>  ftdi_txd -- UART0 receive data
+    uart0_rxd_i =>  ftdi_txd, -- UART0 receive data
+	
+	-- Wishbone bus interface --
+    wb_tag_o    => wb_tag,
+    wb_adr_o    => wb_adr,
+    wb_dat_i    => wb_dat_i,
+    wb_dat_o    => wb_dat_o,
+    wb_we_o     => wb_we_o,
+    wb_sel_o    => wb_sel_o,
+    wb_stb_o    => wb_stb_o,
+    wb_cyc_o    => wb_cyc_o,
+    wb_ack_i    => wb_ack_i,
+    wb_err_i    => wb_err_i
   );
+  
+	sdram_controller : entity work.sdram(arch)
+                       generic map(CLK_FREQ => 50.0)
+                       port map(reset => rst_i,
+                                clk => clk_i,
+                                addr => unsigned(bus_addr(22 downto 0)),
+                                data => bus_wdata,
+                                we => sdram_we,
+                                req => sdram_cs,
+                                ack => sdram_ack,
+                                valid => sdram_valid,
+                                q => sdram_bus_rdata,
+                                
+                                sdram_a => sdram_a,
+                                sdram_ba => sdram_ba,
+                                sdram_dq => sdram_d,
+                                sdram_cke => sdram_cke,
+                                sdram_cs_n => sdram_csn,
+                                sdram_ras_n => sdram_rasn,
+                                sdram_cas_n => sdram_casn,
+                                sdram_we_n => sdram_wen,
+                                sdram_dqml => sdram_dqm(0),
+                                sdram_dqmh => sdram_dqm(1));
 
   -- GPIO output --
   --gpio_o <= con_gpio_o(7 downto 0);
 	led <= con_gpio_o(7 downto 0);
 	rstn_i <= not btn(6) and clk_lock;
+	rst_i <= btn(6) and clk_lock;
 
 end architecture;
