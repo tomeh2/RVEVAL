@@ -130,7 +130,7 @@ architecture neorv32_tb_simple_rtl of neorv32_tb_simple is
     err   : std_ulogic; -- transfer error
     tag   : std_ulogic_vector(02 downto 0); -- request tag
   end record;
-  signal wb_cpu, wb_mem_a, wb_mem_b, wb_mem_c, wb_irq : wishbone_t;
+  signal wb_cpu, wb_mem_a, wb_mem_b, wb_mem_c, wb_irq, wb_sdram : wishbone_t;
 
   -- Wishbone access latency type --
   type ext_mem_read_latency_t is array (0 to 255) of std_ulogic_vector(31 downto 0);
@@ -151,7 +151,28 @@ architecture neorv32_tb_simple_rtl of neorv32_tb_simple is
   signal slink_val : std_ulogic_vector(7 downto 0);
   signal slink_rdy : std_ulogic_vector(7 downto 0);
   signal slink_lst : std_ulogic_vector(7 downto 0);
+  
+  	signal sdram_cntrlr_addr : unsigned(22 downto 0);
+	signal sdram_cntrlr_we : std_logic;
+	signal sdram_cntrlr_q : std_logic_vector(31 downto 0);
+	signal sdram_cntrlr_req : std_logic;
+	signal sdram_cntrlr_ack : std_logic;
+	signal sdram_cntrlr_valid : std_logic;
+	
+	signal sdram_cs_read, sdram_cs_write : std_logic;
+	signal test_state : std_logic_vector(1 downto 0);
 
+
+	signal sdram_clk : std_logic;
+	signal sdram_a : unsigned(12 downto 0);
+	signal sdram_ba : unsigned(1 downto 0);
+	signal sdram_d : std_logic_vector(15 downto 0);
+	signal sdram_cke : std_logic;
+	signal sdram_csn : std_logic;
+	signal sdram_rasn : std_logic;
+	signal sdram_casn : std_logic;
+	signal sdram_wen : std_logic;
+	signal sdram_dqm : std_logic_vector(1 downto 0);
 begin
 
   -- Clock/Reset Generator ------------------------------------------------------------------
@@ -382,15 +403,24 @@ begin
   wb_irq.sel     <= wb_cpu.sel;
   wb_irq.tag     <= wb_cpu.tag;
   wb_irq.cyc     <= wb_cpu.cyc;
+  
+  wb_sdram.addr    <= wb_cpu.addr;
+  wb_sdram.wdata   <= wb_cpu.wdata;
+  wb_sdram.we      <= wb_cpu.we;
+  wb_sdram.sel     <= wb_cpu.sel;
+  wb_sdram.tag     <= wb_cpu.tag;
+  wb_sdram.cyc     <= wb_cpu.cyc;
+  wb_sdram.err     <= '0';
+  wb_sdram.ack     <= '0';
 
   -- CPU read-back signals (no mux here since peripherals have "output gates") --
-  wb_cpu.rdata <= wb_mem_a.rdata or wb_mem_b.rdata or wb_mem_c.rdata or wb_irq.rdata;
-  wb_cpu.ack   <= wb_mem_a.ack   or wb_mem_b.ack   or wb_mem_c.ack   or wb_irq.ack;
-  wb_cpu.err   <= wb_mem_a.err   or wb_mem_b.err   or wb_mem_c.err   or wb_irq.err;
+  wb_cpu.rdata <= wb_mem_a.rdata or wb_mem_b.rdata or wb_mem_c.rdata or wb_irq.rdata or wb_sdram.rdata;
+  wb_cpu.ack   <= wb_mem_a.ack   or wb_mem_b.ack   or wb_mem_c.ack   or wb_irq.ack or wb_sdram.ack;
+  wb_cpu.err   <= wb_mem_a.err   or wb_mem_b.err   or wb_mem_c.err   or wb_irq.err or wb_sdram.err;
 
   -- peripheral select via STROBE signal --
   wb_mem_a.stb <= wb_cpu.stb when (wb_cpu.addr >= ext_mem_a_base_addr_c) and (wb_cpu.addr < std_ulogic_vector(unsigned(ext_mem_a_base_addr_c) + ext_mem_a_size_c)) else '0';
-  wb_mem_b.stb <= wb_cpu.stb when (wb_cpu.addr >= ext_mem_b_base_addr_c) and (wb_cpu.addr < std_ulogic_vector(unsigned(ext_mem_b_base_addr_c) + ext_mem_b_size_c)) else '0';
+  wb_sdram.stb <= wb_cpu.stb when (wb_cpu.addr >= ext_mem_b_base_addr_c) and (wb_cpu.addr < std_ulogic_vector(unsigned(ext_mem_b_base_addr_c) + ext_mem_b_size_c)) else '0';
   wb_mem_c.stb <= wb_cpu.stb when (wb_cpu.addr >= ext_mem_c_base_addr_c) and (wb_cpu.addr < std_ulogic_vector(unsigned(ext_mem_c_base_addr_c) + ext_mem_c_size_c)) else '0';
   wb_irq.stb   <= wb_cpu.stb when (wb_cpu.addr =  irq_trigger_base_addr_c) else '0';
 
@@ -528,6 +558,96 @@ begin
   end process ext_mem_c_access;
 
 
+    sdram_controller : entity work.sdram(arch)
+                       generic map(CLK_FREQ => 50.0)
+                       port map(reset => rst_gen,
+                                clk => clk_gen,
+                                addr => sdram_cntrlr_addr,
+                                data => std_logic_vector(wb_sdram.wdata),
+                                we => sdram_cntrlr_we,
+                                req => sdram_cntrlr_req,
+                                ack => sdram_cntrlr_ack,
+                                valid => sdram_cntrlr_valid,
+                                q => sdram_cntrlr_q,
+                                
+                                sdram_a => sdram_a,
+                                sdram_ba => sdram_ba,
+                                sdram_dq => sdram_d,
+                                sdram_cke => sdram_cke,
+                                sdram_cs_n => sdram_csn,
+                                sdram_ras_n => sdram_rasn,
+                                sdram_cas_n => sdram_casn,
+                                sdram_we_n => sdram_wen,
+                                sdram_dqml => sdram_dqm(0),
+                                sdram_dqmh => sdram_dqm(1));
+                                
+    process(wb_sdram, sdram_cntrlr_q)
+	begin
+		wb_sdram.rdata <= (others => '0');
+		sdram_cntrlr_we <= '0';
+		if (wb_sdram.addr(31 downto 28) = X"4") then
+			sdram_cntrlr_we <= wb_sdram.we;
+			--wb_sdram.rdata <= std_ulogic_vector(sdram_cntrlr_q);
+			wb_sdram.rdata <= X"A0A0A0A0";
+		end if;
+	end process;
+	
+	sdram_cs_proc : process(clk_gen)
+    begin
+        if (rising_edge(clk_gen)) then
+            if (rst_gen = '1') then
+                test_state <= "00";
+            else
+                if (test_state = "00") then
+                    if (wb_sdram.addr(31 downto 28) = X"4" and sdram_cntrlr_valid = '1') then
+                        test_state <= "01";
+                    else
+                        test_state <= "00";
+                    end if;
+                elsif (test_state = "01") then
+                    if (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '0') then
+                        test_state <= "10";
+                    elsif (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "01";
+                    end if;
+                else
+                    if (sdram_cntrlr_valid = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "10";
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
+	
+	sdram_cs_proc_2 : process(test_state)
+    begin
+        if (test_state = "00") then
+            sdram_cs_read <= '0';
+        elsif (test_state = "01") then
+            sdram_cs_read <= '1';
+        else
+            sdram_cs_read <= '0';
+        end if;
+    end process;
+	
+	sdram_cs_proc_3 : process(test_state, sdram_cntrlr_we, sdram_cs_read)
+    begin
+        if (test_state /= "00") then
+            if (sdram_cntrlr_we = '0') then
+                sdram_cntrlr_req <= sdram_cs_read;
+            else 
+                sdram_cntrlr_req <= '1';
+            end if;
+        else
+            sdram_cntrlr_req <= '0';
+        end if;
+    end process; 
+	
+	sdram_cntrlr_addr <= unsigned(wb_cpu.addr(22 downto 0));
   -- Wishbone IRQ Triggers ------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   irq_trigger: process(rst_gen, clk_gen)
