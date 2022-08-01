@@ -96,6 +96,13 @@ end component;
 	signal wb_cyc_o : std_ulogic;
 	signal wb_ack_i : std_ulogic;
 	signal wb_err_i : std_ulogic;
+	
+	signal sdram_cntrlr_addr : unsigned(22 downto 0);
+	signal sdram_cntrlr_we : std_logic;
+	signal sdram_cntrlr_q : std_logic_vector(31 downto 0);
+	signal sdram_cntrlr_req : std_logic;
+	signal sdram_cntrlr_ack : std_logic;
+	signal sdram_cntrlr_valid : std_logic;
 begin
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
@@ -154,13 +161,13 @@ begin
                        generic map(CLK_FREQ => 50.0)
                        port map(reset => rst_i,
                                 clk => clk_i,
-                                addr => unsigned(bus_addr(22 downto 0)),
-                                data => bus_wdata,
-                                we => sdram_we,
-                                req => sdram_cs,
-                                ack => sdram_ack,
-                                valid => sdram_valid,
-                                q => sdram_bus_rdata,
+                                addr => sdram_cntrlr_addr,
+                                data => std_logic_vector(wb_dat_o),
+                                we => sdram_cntrlr_we,
+                                req => sdram_cntrlr_req,
+                                ack => sdram_cntrlr_ack,
+                                valid => sdram_cntrlr_valid,
+                                q => sdram_cntrlr_q,
                                 
                                 sdram_a => sdram_a,
                                 sdram_ba => sdram_ba,
@@ -172,6 +179,22 @@ begin
                                 sdram_we_n => sdram_wen,
                                 sdram_dqml => sdram_dqm(0),
                                 sdram_dqmh => sdram_dqm(1));
+
+	process(wb_adr, wb_we_o, sdram_cntrlr_q)
+	begin
+		wb_dat_i <= (others => '0');
+		sdram_cntrlr_we <= '0';
+		sdram_cntrlr_req <= '0';
+		if (wb_adr(31 downto 23) = X"01") then
+			sdram_cntrlr_we <= wb_we_o;
+			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
+			sdram_cntrlr_req <= '1';
+		end if;
+	end process;
+	
+	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
+	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
+	wb_err_i <= '0';
 
   -- GPIO output --
   --gpio_o <= con_gpio_o(7 downto 0);
