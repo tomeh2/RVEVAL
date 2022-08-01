@@ -249,13 +249,14 @@ begin
     end process; 
 	
 	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
-	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
+	--wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
+	wb_ack_i <= '0';
 	wb_err_i <= '0';
 
   -- GPIO output --
   --gpio_o <= con_gpio_o(7 downto 0);
 	led <= con_gpio_o(7 downto 0);
 	rstn_i <= not btn(6) and clk_lock;
-	rst_i <= btn(6) and clk_lock;
+	rst_i <= not rstn_i;
 
 end architecture;
