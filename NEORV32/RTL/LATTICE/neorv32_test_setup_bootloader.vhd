@@ -42,7 +42,7 @@ use neorv32.neorv32_package.all;
 entity neorv32_test_setup_bootloader is
   generic (
     -- adapt these for your setup --
-    CLOCK_FREQUENCY   : natural := 75000000; -- clock frequency of clk_i in Hz
+    CLOCK_FREQUENCY   : natural := 50000000; -- clock frequency of clk_i in Hz
     MEM_INT_IMEM_SIZE : natural := 16*1024;   -- size of processor-internal instruction memory in bytes
     MEM_INT_DMEM_SIZE : natural := 8*1024     -- size of processor-internal data memory in bytes
   );
@@ -95,14 +95,17 @@ end component;
 	signal wb_stb_o : std_ulogic;
 	signal wb_cyc_o : std_ulogic;
 	signal wb_ack_i : std_ulogic;
-	signal wb_err_i : std_ulogic;
-	
+	signal wb_err_i : std_ulogic;	
+
 	signal sdram_cntrlr_addr : unsigned(22 downto 0);
 	signal sdram_cntrlr_we : std_logic;
 	signal sdram_cntrlr_q : std_logic_vector(31 downto 0);
 	signal sdram_cntrlr_req : std_logic;
 	signal sdram_cntrlr_ack : std_logic;
 	signal sdram_cntrlr_valid : std_logic;
+	
+	signal sdram_cs_read, sdram_cs_write : std_logic;
+	signal test_state : std_logic_vector(1 downto 0);
 begin
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
@@ -184,13 +187,66 @@ begin
 	begin
 		wb_dat_i <= (others => '0');
 		sdram_cntrlr_we <= '0';
-		sdram_cntrlr_req <= '0';
-		if (wb_adr(31 downto 23) = X"01") then
+		if (wb_adr(31 downto 28) = X"4") then
 			sdram_cntrlr_we <= wb_we_o;
 			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
-			sdram_cntrlr_req <= '1';
 		end if;
 	end process;
+	
+	sdram_cs_proc : process(clk_i)
+    begin
+        if (rising_edge(clk_i)) then
+            if (rst_i = '1') then
+                test_state <= "00";
+            else
+                if (test_state = "00") then
+                    if (wb_adr(31 downto 28) = X"4" and sdram_cntrlr_valid = '1') then
+                        test_state <= "01";
+                    else
+                        test_state <= "00";
+                    end if;
+                elsif (test_state = "01") then
+                    if (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '0') then
+                        test_state <= "10";
+                    elsif (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "01";
+                    end if;
+                else
+                    if (sdram_cntrlr_valid = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "10";
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
+	
+	sdram_cs_proc_2 : process(test_state)
+    begin
+        if (test_state = "00") then
+            sdram_cs_read <= '0';
+        elsif (test_state = "01") then
+            sdram_cs_read <= '1';
+        else
+            sdram_cs_read <= '0';
+        end if;
+    end process;
+	
+	sdram_cs_proc_3 : process(test_state, sdram_cntrlr_we, sdram_cs_read)
+    begin
+        if (test_state /= "00") then
+            if (sdram_cntrlr_we = '0') then
+                sdram_cntrlr_req <= sdram_cs_read;
+            else 
+                sdram_cntrlr_req <= '1';
+            end if;
+        else
+            sdram_cntrlr_req <= '0';
+        end if;
+    end process; 
 	
 	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
 	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;

@@ -42,16 +42,14 @@ use neorv32.neorv32_package.all;
 entity neorv32_test_setup_approm is
   generic (
     -- adapt these for your setup --
-    CLOCK_FREQUENCY   : natural := 100000000; -- clock frequency of clk_i in Hz
+    CLOCK_FREQUENCY   : natural := 5000000; -- clock frequency of clk_i in Hz
     MEM_INT_IMEM_SIZE : natural := 16*1024;   -- size of processor-internal instruction memory in bytes
     MEM_INT_DMEM_SIZE : natural := 8*1024     -- size of processor-internal data memory in bytes
   );
   port (
-    -- Global control --
-    clk_i       : in  std_ulogic; -- global clock, rising edge
-    rstn_i      : in  std_ulogic; -- global reset, low-active, async
-    -- GPIO --
-    gpio_o      : out std_ulogic_vector(7 downto 0) -- parallel output
+     clk_i : out std_logic;
+     rstn_i : in std_logic;
+     gpio_o : out std_ulogic_vector(7 downto 0)
   );
 end entity;
 
@@ -59,7 +57,20 @@ architecture neorv32_test_setup_approm_rtl of neorv32_test_setup_approm is
 
   signal con_gpio_o : std_ulogic_vector(63 downto 0);
 
+  signal clk_i1, rstn_i1 : std_logic;
+
+  
 begin
+
+    process
+    begin
+        clk_i1 <= '0';
+        wait for 10ns;
+        clk_i1 <= '1';
+        wait for 10ns;
+    end process;
+    
+    rstn_i1 <= '0', '1' after 30ns;
 
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
@@ -85,14 +96,10 @@ begin
   )
   port map (
     -- Global control --
-    clk_i  => clk_i,     -- global clock, rising edge
-    rstn_i => rstn_i,    -- global reset, low-active, async
+    clk_i  => clk_i1,     -- global clock, rising edge
+    rstn_i => rstn_i1,    -- global reset, low-active, async
     -- GPIO (available if IO_GPIO_EN = true) --
     gpio_o => con_gpio_o -- parallel output
   );
-
-  -- GPIO output --
-  gpio_o <= con_gpio_o(7 downto 0);
-
 
 end architecture;
