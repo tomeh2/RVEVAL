@@ -74,13 +74,16 @@ end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
 
-	component pll_1
-    port (CLKI: in  std_logic; CLKOP: out  std_logic; 
-        CLKOS: out  std_logic; CLKOS2: out  std_logic; 
-        CLKOS3: out  std_logic; LOCK: out  std_logic);
-end component;
+--	component pll_1
+--    port (CLKI: in  std_logic; CLKOP: out  std_logic; 
+--        CLKOS: out  std_logic; CLKOS2: out  std_logic; 
+--        CLKOS3: out  std_logic; LOCK: out  std_logic);
 
-	signal clk_i : std_logic;
+	component pll_sdram_1
+		port(CLKI: in std_logic; CLKOP: out std_logic; CLKOS: out std_logic);
+	end component;
+
+	signal clk_i, clk_sdram : std_logic;
 	signal clk_lock : std_logic;
 
 	signal con_gpio_o : std_ulogic_vector(63 downto 0);
@@ -109,9 +112,10 @@ end component;
 begin
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-	pll_inst : pll_1
-    port map (CLKI=>clk_25mhz, CLKOP=>clk_i, CLKOS=>open, CLKOS2=>open, CLKOS3=>open, 
-        LOCK=>clk_lock);
+	pll_inst : pll_sdram_1
+    port map (CLKI=>clk_25mhz, CLKOP=>clk_sdram, CLKOS=>clk_i);
+  
+  sdram_clk <= clk_sdram;
   
   neorv32_top_inst: neorv32_top
   generic map (
@@ -119,10 +123,10 @@ begin
     CLOCK_FREQUENCY              => CLOCK_FREQUENCY,   -- clock frequency of clk_i in Hz
     INT_BOOTLOADER_EN            => true,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_C        => true,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
-    CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
-    CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
+    CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
+    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_Zicsr    => false,              -- implement CSR system?
+    CPU_EXTENSION_RISCV_Zicntr   => false,              -- implement base counters?
     -- Internal Instruction memory --
     MEM_INT_IMEM_EN              => true,              -- implement processor-internal instruction memory
     MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
@@ -190,6 +194,8 @@ begin
 		if (wb_adr(31 downto 28) = X"4") then
 			sdram_cntrlr_we <= wb_we_o;
 			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
+			--wb_dat_i <= X"A0A0A0A0";
+			
 		end if;
 	end process;
 	
@@ -200,7 +206,7 @@ begin
                 test_state <= "00";
             else
                 if (test_state = "00") then
-                    if (wb_adr(31 downto 28) = X"4" and sdram_cntrlr_valid = '1') then
+                    if (wb_adr(31 downto 28) = X"4" and wb_stb_o = '1') then
                         test_state <= "01";
                     else
                         test_state <= "00";
@@ -249,14 +255,14 @@ begin
     end process; 
 	
 	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
-	--wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
-	wb_ack_i <= '0';
+	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
+	--wb_ack_i <= '1';
 	wb_err_i <= '0';
 
   -- GPIO output --
   --gpio_o <= con_gpio_o(7 downto 0);
 	led <= con_gpio_o(7 downto 0);
-	rstn_i <= not btn(6) and clk_lock;
+	rstn_i <= not btn(6);
 	rst_i <= not rstn_i;
 
 end architecture;

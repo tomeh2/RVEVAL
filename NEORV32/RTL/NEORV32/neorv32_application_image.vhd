@@ -2,7 +2,7 @@
 -- Auto-generated memory initialization file (for APPLICATION) from source file <sdram_test/main.bin>
 -- Size: 1832 bytes
 -- MARCH: default
--- Built: 01.08.2022 10:56:59
+-- Built: 02.08.2022 08:50:41
 
 -- prototype defined in 'neorv32_package.vhd'
 package body neorv32_application_image is

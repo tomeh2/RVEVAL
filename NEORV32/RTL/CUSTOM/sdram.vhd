@@ -71,7 +71,7 @@ entity sdram is
     --
     -- These values can be adjusted to match the exact timing of your SDRAM
     -- chip (refer to the datasheet).
-    T_DESL : real := 100000.0; -- startup delay
+    T_DESL : real := 1000.0; -- startup delay
     T_MRD  : real :=     100.0; -- mode register cycle time
     T_RC   : real :=     200.0; -- row cycle time
     T_RCD  : real :=     100.0; -- RAS to CAS delay
