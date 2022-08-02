@@ -124,7 +124,7 @@ begin
     INT_BOOTLOADER_EN            => true,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
     CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
     CPU_EXTENSION_RISCV_Zicsr    => false,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => false,              -- implement base counters?
     -- Internal Instruction memory --
