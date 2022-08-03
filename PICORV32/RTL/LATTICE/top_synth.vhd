@@ -145,7 +145,7 @@ architecture structural of top_synth is
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
 	
 	signal sdram_cs_read, sdram_cs_write : std_logic;
-	signal test_state : std_logic_vector(1 downto 0);
+	signal sdram_bus_access_state : std_logic_vector(1 downto 0);
 begin
 	sdram_clk <= clk_sdram;
 
@@ -260,13 +260,13 @@ begin
             if (bus_addr(31 downto 24) = X"00") then
                 bus_rdata <= rom_bus_rdata;
                 rom_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"01") then
+            elsif (bus_addr(31 downto 24) = X"10") then
                 bus_rdata <= gpio_bus_rdata;
                 gpio_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"02") then
+            elsif (bus_addr(31 downto 24) = X"20") then
                 bus_rdata <= sdram_bus_rdata;
                 --sdram_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"03") then
+            elsif (bus_addr(31 downto 24) = X"30") then
                 if (bus_addr(23 downto 0) = X"000000") then
                     if (bus_wstrb = "0000") then
                         bus_rdata <= uart_reg_div_do;
@@ -290,47 +290,47 @@ begin
     begin
         if (rising_edge(clk)) then
             if (reset = '1') then
-                test_state <= "00";
+                sdram_bus_access_state <= "00";
             else
-                if (test_state = "00") then
+                if (sdram_bus_access_state = "00") then
                     if (bus_addr(31 downto 24) = X"02" and bus_valid = '1') then
-                        test_state <= "01";
+                        sdram_bus_access_state <= "01";
                     else
-                        test_state <= "00";
+                        sdram_bus_access_state <= "00";
                     end if;
-                elsif (test_state = "01") then
+                elsif (sdram_bus_access_state = "01") then
                     if (sdram_ack = '1' and bus_wstrb = "0000") then
-                        test_state <= "10";
+                        sdram_bus_access_state <= "10";
                     elsif (sdram_ack = '1' and bus_wstrb /= "0000") then
-                        test_state <= "00";
+                        sdram_bus_access_state <= "00";
                     else
-                        test_state <= "01";
+                        sdram_bus_access_state <= "01";
                     end if;
                 else
                     if (sdram_valid = '1') then
-                        test_state <= "00";
+                        sdram_bus_access_state <= "00";
                     else
-                        test_state <= "10";
+                        sdram_bus_access_state <= "10";
                     end if;
                 end if;
             end if;
         end if;
     end process;
     
-    sdram_cs_proc_2 : process(test_state)
+    sdram_cs_proc_2 : process(sdram_bus_access_state)
     begin
-        if (test_state = "00") then
+        if (sdram_bus_access_state = "00") then
             sdram_cs_read <= '0';
-        elsif (test_state = "01") then
+        elsif (sdram_bus_access_state = "01") then
             sdram_cs_read <= '1';
         else
             sdram_cs_read <= '0';
         end if;
     end process;
     
-    sdram_cs_proc_3 : process(test_state, bus_wstrb, sdram_cs_read)
+    sdram_cs_proc_3 : process(sdram_bus_access_state, bus_wstrb, sdram_cs_read)
     begin
-        if (test_state /= "00") then
+        if (sdram_bus_access_state /= "00") then
             if (bus_wstrb = "0000") then
                 sdram_cs <= sdram_cs_read;
             else 
