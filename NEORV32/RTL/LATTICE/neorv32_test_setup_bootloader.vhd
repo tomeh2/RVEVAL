@@ -128,8 +128,8 @@ begin
     CPU_EXTENSION_RISCV_Zicsr    => false,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => false,              -- implement base counters?
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN              => true,              -- implement processor-internal instruction memory
-    MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
+    MEM_INT_IMEM_EN              => false,              -- implement processor-internal instruction memory
+    --MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
 	-- External bus
 	MEM_EXT_EN 					  => true,
 	MEM_EXT_TIMEOUT				  => 1023,
@@ -191,7 +191,7 @@ begin
 	begin
 		wb_dat_i <= (others => '0');
 		sdram_cntrlr_we <= '0';
-		if (wb_adr(31 downto 28) = X"4") then
+		if (wb_adr(31 downto 28) = X"0") then
 			sdram_cntrlr_we <= wb_we_o;
 			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
 			--wb_dat_i <= X"A0A0A0A0";
@@ -206,7 +206,7 @@ begin
                 test_state <= "00";
             else
                 if (test_state = "00") then
-                    if (wb_adr(31 downto 28) = X"4" and wb_stb_o = '1') then
+                    if (wb_adr(31 downto 28) = X"0" and wb_stb_o = '1') then
                         test_state <= "01";
                     else
                         test_state <= "00";
