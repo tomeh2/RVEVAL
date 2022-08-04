@@ -270,6 +270,7 @@ begin
                 if (bus_addr(23 downto 0) = X"000000") then
                     if (bus_wstrb = "0000") then
                         bus_rdata <= uart_reg_div_do;
+						uart_bus_ready <= '1';
                     else
                         uart_reg_div_we <= "1111";
                         uart_bus_ready <= '1';
@@ -280,7 +281,7 @@ begin
                 elsif (bus_addr(23 downto 0) = X"000008") then
                     bus_rdata <= uart_reg_dat_do;
                     uart_reg_dat_re <= '1';
-                    uart_bus_ready <= not uart_reg_dat_wait;
+                    uart_bus_ready <= '1';
                 end if;
             end if;
         end if;
@@ -293,7 +294,7 @@ begin
                 sdram_bus_access_state <= "00";
             else
                 if (sdram_bus_access_state = "00") then
-                    if (bus_addr(31 downto 24) = X"02" and bus_valid = '1') then
+                    if (bus_addr(31 downto 24) = X"20" and bus_valid = '1') then
                         sdram_bus_access_state <= "01";
                     else
                         sdram_bus_access_state <= "00";

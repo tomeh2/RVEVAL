@@ -272,7 +272,7 @@ begin
                 elsif (bus_addr(23 downto 0) = X"000008") then
                     bus_rdata <= uart_reg_dat_do;
                     uart_reg_dat_re <= '1';
-                    uart_bus_ready <= not uart_reg_dat_wait;
+                    uart_bus_ready <= '1';
                 end if;
             end if;
         end if;

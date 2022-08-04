@@ -10,18 +10,20 @@ unsigned int fetch_instruction()
 	unsigned int fetched_instr = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		char recv_char = -1;
+		unsigned int recv_char = 0;
 		do
 		{
 			recv_char = uart_getc();
-		} while (recv_char == -1);
-		fetched_instr |= ((unsigned int) recv_char) << 24;
+			
+		} while (recv_char == 0xFFFFFFFF);
+		fetched_instr |= (recv_char) << 24;
 		fetched_instr >>= 8;
 	}
 	uart_putc((char) fetched_instr);
 	uart_putc((char) fetched_instr >> 8);
 	uart_putc((char) fetched_instr >> 16);
 	uart_putc((char) fetched_instr >> 24);
+	uart_puts("\r\n");
 	return fetched_instr;
 }
 
@@ -39,10 +41,8 @@ int bootloader_main()
 	while (1)
 	{
 		unsigned int fetched_instr = fetch_instruction();
-		
 		if (fetched_instr == 0x1234abcd)
 			break;
-		
 		*sdram_curr_addr = fetched_instr;
 		sdram_curr_addr++;
 	}

@@ -31,8 +31,8 @@ void uart_puts(char* str)
 	}
 }
 
-char uart_getc()
+unsigned int uart_getc()
 {
-	return (char) *uart_rdata_reg;
+	return *uart_rdata_reg;
 }
 #endif
