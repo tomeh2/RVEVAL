@@ -28,7 +28,7 @@ entity top_synth is
 end top_synth;
 
 architecture structural of top_synth is
-	component pll_sdram
+	component pll_sdram_1
 		port(
 			CLKI : in std_logic;
 			CLKOP : out std_logic;
@@ -150,11 +150,11 @@ begin
 	sdram_clk <= clk_sdram;
 
 	-- SDRAM clock is also 50 MHz but phase shifted by 90 degrees
-	clkgen_inst : pll_sdram
+	clkgen_inst : pll_sdram_1
 				  port map(CLKI => clk_25mhz,
 						    CLKOP => clk_sdram,
 						    CLKOS => clk);
-							
+
 	picorv32_inst : picorv32
                port map(mem_valid => bus_valid,
                         mem_instr => bus_instr,
@@ -351,6 +351,7 @@ begin
     led <= gpio_o(7 downto 0);
     
     bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready;
+	--bus_ready <= gpio_bus_ready or rom_bus_ready;
 	
 	sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
     

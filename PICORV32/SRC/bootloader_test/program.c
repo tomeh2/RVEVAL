@@ -1,6 +1,6 @@
 int main()
 {
-	volatile unsigned int* gpio_o = (unsigned int*) 0x1000000;
+	volatile unsigned int* gpio_o = (unsigned int*) 0x10000000;
 	
 	while (1)
 	{

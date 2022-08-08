@@ -6,9 +6,9 @@
 #define CLK_SPEED 50000000
 #define BAUD_RATE 19200
 
-static volatile unsigned int* uart_div_reg = (unsigned int*) 0x3000000;
-static volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x3000004;
-static volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x3000008;
+static volatile unsigned int* uart_div_reg = (unsigned int*) 0x30000000;
+static volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x30000004;
+static volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x30000008;
 
 void uart_init()
 {

@@ -34,7 +34,7 @@ architecture rtl of ram_memory is
 
     impure function init_ram_hex return ram_type is
         file text_file : text open read_mode is "../../../SRC/bootloader_test/firmware.hex";
-		--file text_file : text open read_mode is "C:/users/tomi/desktop/shared/firmware.hex";
+		--file text_file : text open read_mode is "C:\Users\koncarevac\Desktop\Repo\RVEVAL\PICORV32\SRC\sdram_test\firmware.hex";
         variable text_line : line;
         variable ram_content : ram_type;
         variable temp : std_logic_vector(31 downto 0);

@@ -2,13 +2,13 @@
 #define BAUD_RATE 19200
 #define SDRAM_SIZE 1024
 
-volatile unsigned int* uart_div_reg = (unsigned int*) 0x3000000;
-volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x3000004;
-volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x3000008;
+volatile unsigned int* uart_div_reg = (unsigned int*) 0x30000000;
+volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x30000004;
+volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x30000008;
 
-volatile unsigned int* sdram = (unsigned int*) 0x2000000;
-volatile unsigned int* gpio_o = (unsigned int*) 0x1000000;
-volatile unsigned int* gpio_i = (unsigned int*) 0x1000004;
+volatile unsigned int* sdram = (unsigned int*) 0x20000000;
+volatile unsigned int* gpio_o = (unsigned int*) 0x10000000;
+volatile unsigned int* gpio_i = (unsigned int*) 0x10000004;
 
 char str1[32] = "Initializing SDRAM...\n";
 char str2[32] = "Initialization done!\n";

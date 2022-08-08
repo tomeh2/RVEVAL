@@ -23,7 +23,7 @@ int bootloader_entry()
 	uart_puts("Bootloader started!\n");
 
 	unsigned int* prog_curr_addr = (unsigned int*) &rom_prog_start;
-	unsigned int* sdram_curr_addr = (unsigned int*) 0x2000000;
+	unsigned int* sdram_curr_addr = (unsigned int*) 0x20000000;
 
 	char hexVal[9];
 	hexVal[8] = '\0';
