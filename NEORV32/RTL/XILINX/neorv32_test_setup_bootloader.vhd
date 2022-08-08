@@ -61,13 +61,175 @@ entity neorv32_test_setup_bootloader is
     --gpio_o      : out std_ulogic_vector(7 downto 0); -- parallel output
     -- UART0 --
     USB_UART_TX : in std_ulogic; -- UART0 send data
-    USB_UART_RX : out  std_ulogic  -- UART0 receive data
+    USB_UART_RX : out  std_ulogic;  -- UART0 receive data
+    
+    DDR3_D63 : inout std_logic;
+    DDR3_D62 : inout std_logic;
+    DDR3_D61 : inout std_logic;
+    DDR3_D60 : inout std_logic;
+    DDR3_D59 : inout std_logic;
+    DDR3_D58 : inout std_logic;
+    DDR3_D57 : inout std_logic;
+    DDR3_D56 : inout std_logic;
+    DDR3_D55 : inout std_logic;
+    DDR3_D54 : inout std_logic;
+    DDR3_D53 : inout std_logic;
+    DDR3_D52 : inout std_logic;
+    DDR3_D51 : inout std_logic;
+    DDR3_D50 : inout std_logic;
+    DDR3_D49 : inout std_logic;
+    DDR3_D48 : inout std_logic;
+    DDR3_D47 : inout std_logic;
+    DDR3_D46 : inout std_logic;
+    DDR3_D45 : inout std_logic;
+    DDR3_D44 : inout std_logic;
+    DDR3_D43 : inout std_logic;
+    DDR3_D42 : inout std_logic;
+    DDR3_D41 : inout std_logic;
+    DDR3_D40 : inout std_logic;
+    DDR3_D39 : inout std_logic;
+    DDR3_D38 : inout std_logic;
+    DDR3_D37 : inout std_logic;
+    DDR3_D36 : inout std_logic;
+    DDR3_D35 : inout std_logic;
+    DDR3_D34 : inout std_logic;
+    DDR3_D33 : inout std_logic;
+    DDR3_D32 : inout std_logic;
+    DDR3_D31 : inout std_logic;
+    DDR3_D30 : inout std_logic;
+    DDR3_D29 : inout std_logic;
+    DDR3_D28 : inout std_logic;
+    DDR3_D27 : inout std_logic;
+    DDR3_D26 : inout std_logic;
+    DDR3_D25 : inout std_logic;
+    DDR3_D24 : inout std_logic;
+    DDR3_D23 : inout std_logic;
+    DDR3_D22 : inout std_logic;
+    DDR3_D21 : inout std_logic;
+    DDR3_D20 : inout std_logic;
+    DDR3_D19 : inout std_logic;
+    DDR3_D18 : inout std_logic;
+    DDR3_D17 : inout std_logic;
+    DDR3_D16 : inout std_logic;
+    DDR3_D15 : inout std_logic;
+    DDR3_D14 : inout std_logic;
+    DDR3_D13 : inout std_logic;
+    DDR3_D12 : inout std_logic;
+    DDR3_D11 : inout std_logic;
+    DDR3_D10 : inout std_logic;
+    DDR3_D9 : inout std_logic;
+    DDR3_D8 : inout std_logic;
+    DDR3_D7 : inout std_logic;
+    DDR3_D6 : inout std_logic;
+    DDR3_D5 : inout std_logic;
+    DDR3_D4 : inout std_logic;
+    DDR3_D3 : inout std_logic;
+    DDR3_D2 : inout std_logic;
+    DDR3_D1 : inout std_logic;
+    DDR3_D0 : inout std_logic;
+    
+    DDR3_DQS7_P : inout std_logic;
+    DDR3_DQS6_P : inout std_logic;
+    DDR3_DQS5_P : inout std_logic;
+    DDR3_DQS4_P : inout std_logic;
+    DDR3_DQS3_P : inout std_logic;
+    DDR3_DQS2_P : inout std_logic;
+    DDR3_DQS1_P : inout std_logic;
+    DDR3_DQS0_P : inout std_logic;
+    DDR3_DQS7_N : inout std_logic;
+    DDR3_DQS6_N : inout std_logic;
+    DDR3_DQS5_N : inout std_logic;
+    DDR3_DQS4_N : inout std_logic;
+    DDR3_DQS3_N : inout std_logic;
+    DDR3_DQS2_N : inout std_logic;
+    DDR3_DQS1_N : inout std_logic;
+    DDR3_DQS0_N : inout std_logic;
+    
+    DDR3_DM7 : out std_logic;
+    DDR3_DM6 : out std_logic;
+    DDR3_DM5 : out std_logic;
+    DDR3_DM4 : out std_logic;
+    DDR3_DM3 : out std_logic;
+    DDR3_DM2 : out std_logic;
+    DDR3_DM1 : out std_logic;
+    DDR3_DM0 : out std_logic;
+    
+    DDR3_A15 : out std_logic;
+    DDR3_A14 : out std_logic;
+    DDR3_A13 : out std_logic;
+    DDR3_A12 : out std_logic;
+    DDR3_A11 : out std_logic;
+    DDR3_A10 : out std_logic;
+    DDR3_A9 : out std_logic;
+    DDR3_A8 : out std_logic;
+    DDR3_A7 : out std_logic;
+    DDR3_A6 : out std_logic;
+    DDR3_A5 : out std_logic;
+    DDR3_A4 : out std_logic;
+    DDR3_A3 : out std_logic;
+    DDR3_A2 : out std_logic;
+    DDR3_A1 : out std_logic;
+    DDR3_A0 : out std_logic;
+    
+    DDR3_BA2 : out std_logic;
+    DDR3_BA1 : out std_logic;
+    DDR3_BA0 : out std_logic;
+    
+    DDR3_CAS_B : out std_logic;
+    DDR3_RAS_B : out std_logic;
+    DDR3_WE_B : out std_logic;
+    
+    DDR3_CKE0 : out std_logic;
+    DDR3_CKE1 : out std_logic;
+    
+    DDR3_CLK0_P : out std_logic;
+    DDR3_CLK0_N : out std_logic;
+    DDR3_CLK1_P : out std_logic;
+    DDR3_CLK1_N : out std_logic;
+    
+    DDR3_ODT0 : out std_logic;
+    DDR3_ODT1 : out std_logic
   );
 end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
 
-  signal con_gpio_o : std_ulogic_vector(63 downto 0);
+    signal con_gpio_o : std_ulogic_vector(63 downto 0);
+    signal ddr3_d : std_logic_vector(63 downto 0);
+
+    component drac_ddr3
+    port
+    (
+        ckin : in std_logic;
+        ckout : out std_logic;
+        ckouthalf : out std_logic;
+        reset : out std_logic;
+        
+        ddq : inout std_logic_vector(63 downto 0);
+        dqsp : inout std_logic_vector(7 downto 0);
+        dqsn : inout std_logic_vector(7 downto 0);
+        ddm : out std_logic_vector(7 downto 0);
+        da : out std_logic_vector(15 downto 0);
+        dba : out std_logic_vector(2 downto 0);
+        dcmd : out std_logic_vector(2 downto 0);
+        dce : out std_logic_vector(1 downto 0);
+        dcs : out std_logic_vector(1 downto 0);
+        dckp : out std_logic_vector(1 downto 0);
+        dckn : out std_logic_vector(1 downto 0);
+        dodt : out std_logic_vector(1 downto 0);
+        
+        srd : in std_logic;
+        swd : in std_logic;
+        sa : in std_logic_vector(33 downto 5);
+        swdat : in std_logic_vector(255 downto 0);
+        smsk : in std_logic_vector(31 downto 0);
+        srdat : out std_logic_vector(255 downto 0);
+        srdy : out std_logic;
+        
+        dbg_in : out std_logic_vector(2 downto 0);
+        dbg_out : in std_logic_vector(7 downto 0)
+    );
+    end component;
 
 component clk_wiz_0
 port
@@ -126,6 +288,139 @@ begin
     uart0_txd_o => USB_UART_RX, -- UART0 send data
     uart0_rxd_i => USB_UART_TX  -- UART0 receive data
   );
+  
+  drac_ddr3_instr : drac_ddr3
+  port map(ckin => clk_i,
+           ckout => ,
+           ckouthalf => ,
+           
+           ddq(63) => DDR3_D63,
+           ddq(62) => DDR3_D62,
+           ddq(61) => DDR3_D61,
+           ddq(60) => DDR3_D60,
+           ddq(59) => DDR3_D59,
+           ddq(58) => DDR3_D58,
+           ddq(57) => DDR3_D57,
+           ddq(56) => DDR3_D56,
+           ddq(55) => DDR3_D55,
+           ddq(54) => DDR3_D54,
+           ddq(53) => DDR3_D53,
+           ddq(52) => DDR3_D52,
+           ddq(51) => DDR3_D51,
+           ddq(50) => DDR3_D50,
+           ddq(49) => DDR3_D49,
+           ddq(48) => DDR3_D48,
+           ddq(47) => DDR3_D47,
+           ddq(46) => DDR3_D46,
+           ddq(45) => DDR3_D45,
+           ddq(44) => DDR3_D44,
+           ddq(43) => DDR3_D43,
+           ddq(42) => DDR3_D42,
+           ddq(41) => DDR3_D41,
+           ddq(40) => DDR3_D40,
+           ddq(39) => DDR3_D39,
+           ddq(38) => DDR3_D38,
+           ddq(37) => DDR3_D37,
+           ddq(36) => DDR3_D36,
+           ddq(35) => DDR3_D35,
+           ddq(34) => DDR3_D34,
+           ddq(33) => DDR3_D33,
+           ddq(32) => DDR3_D32,
+           ddq(31) => DDR3_D31,
+           ddq(30) => DDR3_D30,
+           ddq(29) => DDR3_D29,
+           ddq(28) => DDR3_D28,
+           ddq(27) => DDR3_D27,
+           ddq(26) => DDR3_D26,
+           ddq(25) => DDR3_D25,
+           ddq(24) => DDR3_D24,
+           ddq(23) => DDR3_D23,
+           ddq(22) => DDR3_D22,
+           ddq(21) => DDR3_D21,
+           ddq(20) => DDR3_D20,
+           ddq(19) => DDR3_D19,
+           ddq(18) => DDR3_D18,
+           ddq(17) => DDR3_D17,
+           ddq(16) => DDR3_D16,
+           ddq(15) => DDR3_D15,
+           ddq(14) => DDR3_D14,
+           ddq(13) => DDR3_D13,
+           ddq(12) => DDR3_D12,
+           ddq(11) => DDR3_D11,
+           ddq(10) => DDR3_D10,
+           ddq(9) => DDR3_D9,
+           ddq(8) => DDR3_D8,
+           ddq(7) => DDR3_D7,
+           ddq(6) => DDR3_D6,
+           ddq(5) => DDR3_D5,
+           ddq(4) => DDR3_D4,
+           ddq(3) => DDR3_D3,
+           ddq(2) => DDR3_D2,
+           ddq(1) => DDR3_D1,
+           ddq(0) => DDR3_D0,
+           
+           dqsp(7) => DDR3_DQS7_P,
+           dqsp(6) => DDR3_DQS6_P,
+           dqsp(5) => DDR3_DQS5_P,
+           dqsp(4) => DDR3_DQS4_P,
+           dqsp(3) => DDR3_DQS3_P,
+           dqsp(2) => DDR3_DQS2_P,
+           dqsp(1) => DDR3_DQS1_P,
+           dqsp(0) => DDR3_DQS0_P,
+           dqsn(7) => DDR3_DQS7_N,
+           dqsn(6) => DDR3_DQS6_N,
+           dqsn(5) => DDR3_DQS5_N,
+           dqsn(4) => DDR3_DQS4_N,
+           dqsn(3) => DDR3_DQS3_N,
+           dqsn(2) => DDR3_DQS2_N,
+           dqsn(1) => DDR3_DQS1_N,
+           dqsn(0) => DDR3_DQS0_N,
+           
+           ddm(7) => DDR3_DM7,
+           ddm(6) => DDR3_DM6,
+           ddm(5) => DDR3_DM5,
+           ddm(4) => DDR3_DM4,
+           ddm(3) => DDR3_DM3,
+           ddm(2) => DDR3_DM2,
+           ddm(1) => DDR3_DM1,
+           ddm(0) => DDR3_DM0,
+           
+           da(15) => DDR3_A15, 
+           da(14) => DDR3_A14, 
+           da(13) => DDR3_A13, 
+           da(12) => DDR3_A12, 
+           da(11) => DDR3_A11, 
+           da(10) => DDR3_A10, 
+           da(9) => DDR3_A9, 
+           da(8) => DDR3_A8, 
+           da(7) => DDR3_A7, 
+           da(6) => DDR3_A6, 
+           da(5) => DDR3_A5, 
+           da(4) => DDR3_A4, 
+           da(3) => DDR3_A3, 
+           da(2) => DDR3_A2, 
+           da(1) => DDR3_A1, 
+           da(0) => DDR3_A0, 
+           
+           dba(2) => DDR3_BA2,
+           dba(1) => DDR3_BA1,
+           dba(0) => DDR3_BA0,
+           
+           dcmd(2) => DDR3_RAS_B,
+           dcmd(1) => DDR3_CAS_B,
+           dcmd(0) => DDR3_WE_B,
+           
+           dce(1) => DDR3_CKE1,
+           dce(0) => DDR3_CKE0,
+           
+           dckp(1) => DDR3_CLK1_P,
+           dckp(0) => DDR3_CLK0_P,
+           dckn(1) => DDR3_CLK1_N,
+           dckn(0) => DDR3_CLK0_N,
+           
+           dodt(1) => DDR3_ODT1,
+           dodt(1) => DDR3_ODT0
+           ); 
 
 
   -- GPIO output --
@@ -134,5 +429,8 @@ begin
   GPIO_LED_1 <= con_gpio_o(1);
   GPIO_LED_2 <= con_gpio_o(2);
   GPIO_LED_3 <= con_gpio_o(3);
+  
+  
+  
 
 end architecture;
