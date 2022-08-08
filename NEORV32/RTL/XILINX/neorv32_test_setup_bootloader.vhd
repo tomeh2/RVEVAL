@@ -219,15 +219,15 @@ architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader 
         dodt : out std_logic_vector(1 downto 0);
         
         srd : in std_logic;
-        swd : in std_logic;
+        swr : in std_logic;
         sa : in std_logic_vector(33 downto 5);
         swdat : in std_logic_vector(255 downto 0);
         smsk : in std_logic_vector(31 downto 0);
         srdat : out std_logic_vector(255 downto 0);
         srdy : out std_logic;
         
-        dbg_in : out std_logic_vector(2 downto 0);
-        dbg_out : in std_logic_vector(7 downto 0)
+        dbg_in : out std_logic_vector(7 downto 0);
+        dbg_out : in std_logic_vector(2 downto 0)
     );
     end component;
 
@@ -242,7 +242,16 @@ port
   locked : out std_logic
  );
 end component;
-    signal clk_i, clk_2, rstn_i, uart_rx, uart_tx, clk_locked : std_logic;
+    signal clk_i, clk_ddr_out, clk_ddr_half, clk_2, rstn_i, uart_rx, uart_tx, clk_locked : std_logic;
+    signal srd, swd, srdy, stb : std_logic;
+    signal sa : std_ulogic_vector(28 downto 0);
+    signal swdat, srdat : std_ulogic_vector(31 downto 0);
+    signal smsk : std_ulogic_vector(31 downto 0);
+    
+    signal sa_2 : std_logic_vector(28 downto 0);
+    signal swdat_2, srdat_2 : std_logic_vector(255 downto 0);
+    signal srdat_3 : std_logic_vector(31 downto 0);
+    signal smsk_2 : std_logic_vector(31 downto 0);
 begin
     your_instance_name : clk_wiz_0
    port map ( 
@@ -267,12 +276,15 @@ begin
     CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
     CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
+    
+    MEM_EXT_EN => true,
+    MEM_EXT_TIMEOUT => 1023,
     -- Internal Instruction memory --
     MEM_INT_IMEM_EN              => true,              -- implement processor-internal instruction memory
     MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
     -- Internal Data memory --
-    MEM_INT_DMEM_EN              => true,              -- implement processor-internal data memory
-    MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
+    MEM_INT_DMEM_EN              => false,              -- implement processor-internal data memory
+    --MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
     -- Processor peripherals --
     IO_GPIO_EN                   => true,              -- implement general purpose input/output port unit (GPIO)?
     IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
@@ -286,13 +298,36 @@ begin
     gpio_o      => con_gpio_o,  -- parallel output
     -- primary UART0 (available if IO_UART0_EN = true) --
     uart0_txd_o => USB_UART_RX, -- UART0 send data
-    uart0_rxd_i => USB_UART_TX  -- UART0 receive data
+    uart0_rxd_i => USB_UART_TX,  -- UART0 receive data
+    
+        -- Wishbone bus interface (available if MEM_EXT_EN = true) --
+    wb_tag_o    => open,                         -- request tag
+    wb_adr_o(28 downto 0)    => sa,                         -- address
+    wb_adr_o(31 downto 29) => open,
+    wb_dat_i    => srdat,              -- read data
+    wb_dat_o    => swdat,                         -- write data
+    wb_we_o     => swd,                         -- read/write
+    wb_sel_o    => smsk(3 downto 0),                         -- byte enable
+    wb_stb_o    => stb,                         -- strobe
+    wb_cyc_o    => open,                         -- valid cycle
+    wb_ack_i    => srdy,                          -- transfer acknowledge
+    wb_err_i    => '0'                          -- transfer error
   );
+  srd <= not swd and stb;
+  smsk(31 downto 4) <= (others => '0');
+  
+  sa_2 <= std_logic_vector(sa);
+  srdat_3 <= srdat_2(31 downto 0);
+  srdat <= std_ulogic_vector(srdat_3);
+  swdat_2(31 downto 0) <= std_logic_vector(swdat);
+  swdat_2(255 downto 32) <= (others => '0');
+  smsk_2 <= std_logic_vector(smsk);
+  smsk_2(31 downto 4) <= (others => '0'); 
   
   drac_ddr3_instr : drac_ddr3
   port map(ckin => clk_i,
-           ckout => ,
-           ckouthalf => ,
+           ckout => clk_ddr_out,
+           ckouthalf => clk_ddr_half,
            
            ddq(63) => DDR3_D63,
            ddq(62) => DDR3_D62,
@@ -419,7 +454,17 @@ begin
            dckn(0) => DDR3_CLK0_N,
            
            dodt(1) => DDR3_ODT1,
-           dodt(1) => DDR3_ODT0
+           dodt(0) => DDR3_ODT0,
+           
+           srd => srd,
+           swr => swd,
+           sa => sa_2,
+           swdat => swdat_2,
+           smsk => smsk_2,
+           srdat => srdat_2,
+           srdy => srdy,
+           
+           dbg_out => "000"
            ); 
 
 

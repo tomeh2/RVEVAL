@@ -99,6 +99,8 @@ begin
     clk_i  => clk_i1,     -- global clock, rising edge
     rstn_i => rstn_i1,    -- global reset, low-active, async
     -- GPIO (available if IO_GPIO_EN = true) --
+    
+    
     gpio_o => con_gpio_o -- parallel output
   );
 
