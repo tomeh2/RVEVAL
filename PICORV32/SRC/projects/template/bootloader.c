@@ -1,4 +1,4 @@
-#include "../lib/uart.h"
+#include "../../lib/uart.h"
 
 extern int main();
 
