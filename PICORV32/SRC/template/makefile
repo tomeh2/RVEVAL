@@ -23,7 +23,7 @@ $(info $(SOURCES))
 $(info $(FIRMWARE_OBJS))
 $(info $(LIB_DIR))
 
-.PHONY: hex clean
+.PHONY: clean
 
 $(FIRMWARE_HEX): $(FIRMWARE_BIN)
 	$(PYTHON) makehex.py $< 1024 > firmware.hex
@@ -37,12 +37,15 @@ $(FIRMWARE_IMAGE): $(FIRMWARE_OBJS)
 		$(FIRMWARE_OBJS) -lgcc
 	
 $(BUILDDIR)%.o: %.c
+	if not exist build (mkdir build)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)%.o: %.s
+	if not exist build (mkdir build)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)%.o: $(SOURCES_LIB)
+	if not exist build (mkdir build)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 decomp:
@@ -56,4 +59,4 @@ clean:
 	del *.bin
 	del decomp
 	del sects
-	del build
+	rmdir /s /q build
