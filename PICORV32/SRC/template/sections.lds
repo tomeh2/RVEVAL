@@ -8,17 +8,17 @@ SECTIONS
 	rom_bootloader_start = BOOTLOADER_ADDR_START;
 	.bootldr 0 : AT(rom_bootloader_start)
 	{
-		start.o ( .text )
-		bootloader.o ( .text )
-		uart.o ( .text )
+		build/start.o ( .text )
+		build/bootloader.o ( .text )
+		build/uart.o ( .text )
 	}
 	rom_bootloader_end = rom_bootloader_start + SIZEOF(.bootldr);
 	
 	.data_bootldr :
 	{
-		start.o ( .rodata .data .bss )
-		bootloader.o ( .rodata .data .bss )
-		uart.o ( .rodata .data .sdata )
+		build/start.o ( .rodata .data .bss )
+		build/bootloader.o ( .rodata .data .bss )
+		build/uart.o ( .rodata .data .sdata )
 	}
 	rom_rodata_end = rom_bootloader_end + SIZEOF(.data_bootldr);
 	
@@ -27,8 +27,8 @@ SECTIONS
 	rom_prog_start = .;
 	.prog_instr SDRAM_PROG_ADDR : AT(rom_rodata_end)
 	{
-		program.o ( .text )
-		program.o ( .rodata .data .bss )
+		build/program.o ( .text )
+		build/program.o ( .rodata .data .bss )
 		
 	}
 	rom_prog_end = rom_prog_start + SIZEOF(.prog_instr);
