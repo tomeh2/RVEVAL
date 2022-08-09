@@ -38,3 +38,4 @@ PICORV32/RTL/NEXYS_A7/*
 *.o
 *.asm
 *.elf
+*.bin
