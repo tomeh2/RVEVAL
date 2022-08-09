@@ -27,10 +27,10 @@
         <Source name="../CUSTOM/ram_simulation.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
-        <Source name="pll_sdram/pll_sdram_1/pll_sdram_1.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../CUSTOM/simpleuart.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="../CUSTOM/simpleuart.v" type="Verilog" type_short="Verilog">
+        <Source name="pll_sdram_1.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../CONSTRAINTS/ulx3s.lpf" type="Logic Preference" type_short="LPF">

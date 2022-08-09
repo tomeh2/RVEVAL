@@ -1,37 +1,44 @@
 TOOLCHAIN_PREFIX := riscv32-unknown-elf-
 PYTHON := python
 
-FIRMWARE_OBJS := start.o program.o bootloader.o uart.o
+CFLAGS := -ffreestanding -nostdlib -mabi=ilp32 -march=rv32i
+CC := $(TOOLCHAIN_PREFIX)gcc
 
-firmware.hex: firmware.bin makehex.py
-	$(PYTHON) makehex.py $< 1024 > $@
+SOURCES_C := $(wildcard *.c)
+SOURCES_S += $(wildcard *.s)
+FIRMWARE_OBJS := $(patsubst %.c, %.o, $(SOURCES_C))
+FIRMWARE_OBJS += $(patsubst %.s, %.o, $(SOURCES_S))
+
+$(info $(SOURCES))
+$(info $(FIRMWARE_OBJS))
+
+.PHONY: hex clean
+
+hex: firmware.bin makehex.py
+	$(PYTHON) makehex.py $< 1024 > firmware.hex
 
 firmware.bin: firmware.elf
 	$(TOOLCHAIN_PREFIX)objcopy -O binary $< $@
 
-firmware.elf: $(FIRMWARE_OBJS) $(TEST_OBJS) sections.lds
-	$(TOOLCHAIN_PREFIX)gcc -Os -mabi=ilp32 -march=rv32i -ffreestanding -nostdlib -o $@ \
+firmware.elf: $(FIRMWARE_OBJS)
+	$(CC) -Os -mabi=ilp32 -march=rv32i -ffreestanding -nostdlib -o $@ \
 		-Wl,--build-id=none,-Bstatic,-T,sections.lds,--strip-debug \
-		$(FIRMWARE_OBJS) $(TEST_OBJS) -lgcc
-	
-start.o:
-	$(TOOLCHAIN_PREFIX)gcc -c start.s -ffreestanding -nostdlib -march=rv32i 
-	
-program.o:
-	$(TOOLCHAIN_PREFIX)gcc -c program.c -ffreestanding -nostdlib -march=rv32i 
-	
-bootloader.o:
-	$(TOOLCHAIN_PREFIX)gcc -c bootloader.c -ffreestanding -nostdlib -march=rv32i 
-	
-uart.o: uart.c uart.h
-	$(TOOLCHAIN_PREFIX)gcc -c uart.c -ffreestanding -nostdlib -march=rv32i 
-	
+		$(FIRMWARE_OBJS) -lgcc
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
+
+%.o: %.s
+	$(CC) $(CFLAGS) -c $<
+
 decomp:
 	$(TOOLCHAIN_PREFIX)objdump firmware.elf -h > sects
 	$(TOOLCHAIN_PREFIX)objdump firmware.elf -d --disassemble-all > decomp
-	
-clear:
-	rm -f *.o
-	rm -f *.hex
-	rm -f *.elf
-	rm -f *.bin
+
+clean:
+	del *.o
+	del *.hex
+	del *.elf
+	del *.bin
+	del decomp
+	del sects

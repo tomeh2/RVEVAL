@@ -141,9 +141,6 @@
         <Source name="../NEORV32/neorv32_xirq.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="pll/pll_1/pll_1.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="../CUSTOM/sdram.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>

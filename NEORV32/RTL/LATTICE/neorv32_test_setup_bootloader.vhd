@@ -74,11 +74,6 @@ end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
 
---	component pll_1
---    port (CLKI: in  std_logic; CLKOP: out  std_logic; 
---        CLKOS: out  std_logic; CLKOS2: out  std_logic; 
---        CLKOS3: out  std_logic; LOCK: out  std_logic);
-
 	component pll_sdram_1
 		port(CLKI: in std_logic; CLKOP: out std_logic; CLKOS: out std_logic);
 	end component;
@@ -194,7 +189,6 @@ begin
 		if (wb_adr(31 downto 28) = X"0") then
 			sdram_cntrlr_we <= wb_we_o;
 			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
-			--wb_dat_i <= X"A0A0A0A0";
 			
 		end if;
 	end process;
@@ -256,11 +250,9 @@ begin
 	
 	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
 	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
-	--wb_ack_i <= '1';
 	wb_err_i <= '0';
 
   -- GPIO output --
-  --gpio_o <= con_gpio_o(7 downto 0);
 	led <= con_gpio_o(7 downto 0);
 	rstn_i <= not btn(6);
 	rst_i <= not rstn_i;
