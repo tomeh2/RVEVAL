@@ -40,15 +40,15 @@ $(FIRMWARE_IMAGE): $(FIRMWARE_OBJS)
 	
 $(BUILDDIR)/%.o: %.c
 	@if not exist build (mkdir $(BUILDDIR))
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -I$(LIB_DIR)
 
 $(BUILDDIR)/%.o: %.s
 	@if not exist build (mkdir $(BUILDDIR))
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -I$(LIB_DIR)
 
 $(BUILDDIR)/%.o: $(SOURCES_LIB)
 	@if not exist build (mkdir $(BUILDDIR))
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -I$(LIB_DIR)
 
 decomp:
 	$(TOOLCHAIN_PREFIX)objdump $(FIRMWARE_IMAGE) -d --disassemble-all > decompiled
