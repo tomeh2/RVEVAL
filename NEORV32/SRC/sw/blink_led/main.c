@@ -38,7 +38,7 @@
  * @author Stephan Nolting
  * @brief Simple blinking LED demo program using the lowest 8 bits of the GPIO.output port.
  **************************************************************************/
-#include <neorv32.h>
+//#include <neorv32.h>
 
 
 /**********************************************************************//**
@@ -53,13 +53,13 @@ int main() {
   // This is a *minimal* example program.
 
   // clear GPIO output (set all bits to 0)
-  neorv32_gpio_port_set(0);
+//  neorv32_gpio_port_set(0);
 
   int cnt = 0;
 
   while (1) {
-    neorv32_gpio_port_set(cnt++ & 0xFF); // increment counter and mask for lowest 8 bit
-    neorv32_cpu_delay_ms(256); // wait 256ms using busy wait
+//    neorv32_gpio_port_set(cnt++ & 0xFF); // increment counter and mask for lowest 8 bit
+//    neorv32_cpu_delay_ms(256); // wait 256ms using busy wait
   }
 
   // this should never be reached

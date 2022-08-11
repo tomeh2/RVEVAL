@@ -27,6 +27,9 @@ architecture structural of top_vhdl is
     signal rom_bus_rdata : std_logic_vector(31 downto 0);
     signal rom_bus_ready, rom_cs : std_logic;
     
+    signal ram_bus_rdata : std_logic_vector(31 downto 0);
+    signal ram_bus_ready, ram_cs : std_logic;
+    
     signal sdram_bus_rdata : std_logic_vector(31 downto 0);
     signal sdram_bus_ready, sdram_valid, sdram_cs_read, sdram_cs_write, sdram_cs, sdram_ack : std_logic;
     
@@ -110,7 +113,7 @@ begin
     reset <= not resetn;
 
     picorv32 : entity work.picorv32(picorv32)
-               generic map(STACKADDR => X"0000_1000",
+               generic map(STACKADDR => X"1000_1000",
                            PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
@@ -140,17 +143,27 @@ begin
                         clk => clk,
                         resetn => resetn);
     
-    --rom : entity work.rom_memory(rtl)
-    --      generic map(SIZE => 128)
-    --      port map(bus_addr => bus_addr(8 downto 0),
-    --               bus_rdata => rom_bus_rdata,
-    --               bus_wstrb => bus_wstrb,
-    --               bus_ready => rom_bus_ready,
+    rom : entity work.rom_memory(rtl)
+		  generic map(SIZE_BYTES => 4096)
+		  port map(bus_addr => bus_addr(11 downto 0),
+				   bus_rdata => rom_bus_rdata,
+				   bus_ready => rom_bus_ready,
+				   
+				   en => rom_cs,
+				   clk => clk,
+				   resetn => resetn);
+					
+    ram : entity work.ram_memory(rtl)
+          generic map(SIZE_BYTES => 4096)
+          port map(bus_addr => bus_addr(11 downto 0),
+                   bus_wdata => bus_wdata,
+                   bus_rdata => ram_bus_rdata,
+                   bus_wstrb => bus_wstrb,
+                   bus_ready => ram_bus_ready,
                    
-    --               en => rom_cs,
-    --               clk => clk,
-    --               resetn => resetn);
-
+                   en => ram_cs,
+                   clk => clk,
+                   resetn => resetn);
     gpio : entity work.gpio_device(rtl)
            port map(gpio_i => gpio_i,
                     gpio_o => gpio_o,
@@ -187,18 +200,6 @@ begin
                                 sdram_we_n => sdram_we_n,
                                 sdram_dqml => sdram_dqml,
                                 sdram_dqmh => sdram_dqmh);
-                    
-    rom : entity work.ram_memory(rtl)
-          generic map(SIZE => 1024)
-          port map(bus_addr => bus_addr(11 downto 0),
-                   bus_wdata => bus_wdata,
-                   bus_rdata => rom_bus_rdata,
-                   bus_wstrb => bus_wstrb,
-                   bus_ready => rom_bus_ready,
-                   
-                   en => rom_cs,
-                   clk => clk,
-                   resetn => resetn);
            
     mt48lc16m16a2_dev : mt48lc16m16a2
                         port map(Dq => sdram_dq,
@@ -238,43 +239,49 @@ begin
     process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
     begin
         bus_rdata <= (others => '0');
-        gpio_cs <= '0';
-        rom_cs <= '0';
-        --sdram_cs <= '0';
-        sdram_cs_write <= '0';
-    
-        uart_reg_div_we <= (others => '0');
-        uart_reg_dat_we <= '0';
-        uart_reg_dat_re <= '0';
-        uart_bus_ready <= '0';
+		gpio_cs <= '0';
+		ram_cs <= '0';
+		rom_cs <= '0';
+		sdram_cs_write <= '0';
+				
+		uart_reg_div_we <= (others => '0');
+		uart_reg_dat_we <= '0';
+		uart_reg_dat_re <= '0';
+		uart_bus_ready <= '0';
+					
         if (bus_valid = '1') then
-            if (bus_addr(31 downto 24) = X"00") then
-                bus_rdata <= rom_bus_rdata;
-                rom_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"10") then
-                bus_rdata <= gpio_bus_rdata;
-                gpio_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"20") then
-                bus_rdata <= sdram_bus_rdata;
-                sdram_cs_write <= '1';
-                --sdram_cs <= '1';
-            elsif (bus_addr(31 downto 24) = X"30") then
-                if (bus_addr(23 downto 0) = X"000000") then
-                    if (bus_wstrb = "0000") then
-                        bus_rdata <= uart_reg_div_do;
-                    else
-                        uart_reg_div_we <= "1111";
-                        uart_bus_ready <= '1';
-                    end if;
-                elsif (bus_addr(23 downto 0) = X"000004") then
-                    uart_reg_dat_we <= '1';
-                    uart_bus_ready <= not uart_reg_dat_wait;
-                elsif (bus_addr(23 downto 0) = X"000008") then
-                    bus_rdata <= uart_reg_dat_do;
-                    uart_reg_dat_re <= '1';
-                    uart_bus_ready <= '1';
-                end if;
-            end if;
+			case bus_addr(31 downto 24) is
+				when X"00" =>
+					bus_rdata <= rom_bus_rdata;
+					rom_cs <= '1';
+				when X"10" => 
+					bus_rdata <= ram_bus_rdata;
+					ram_cs <= '1';
+				when X"20" =>
+					bus_rdata <= sdram_bus_rdata;
+				when X"30" =>
+					if (bus_addr(23 downto 0) = X"000000") then
+						if (bus_wstrb = "0000") then
+							bus_rdata <= uart_reg_div_do;
+							uart_bus_ready <= '1';
+						else
+							uart_reg_div_we <= "1111";
+							uart_bus_ready <= '1';
+						end if;
+					elsif (bus_addr(23 downto 0) = X"000004") then
+						uart_reg_dat_we <= '1';
+						uart_bus_ready <= not uart_reg_dat_wait;
+					elsif (bus_addr(23 downto 0) = X"000008") then
+						bus_rdata <= uart_reg_dat_do;
+						uart_reg_dat_re <= '1';
+						uart_bus_ready <= '1';
+					end if;
+				when X"40" => 
+					bus_rdata <= gpio_bus_rdata;
+					gpio_cs <= '1';
+				when others => 
+					
+			end case;
         end if;
     end process;
     
@@ -334,7 +341,7 @@ begin
     end process; 
 
     gpio_i <= X"1111_1111";
-    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready;
+    bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready or ram_bus_ready;
     
     sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
     

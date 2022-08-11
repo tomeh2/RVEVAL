@@ -1,4 +1,4 @@
-TOOLCHAIN_PREFIX := riscv32-unknown-elf-
+TOOLCHAIN_PREFIX := riscv32-elf-
 PYTHON := python
 
 CFLAGS := -ffreestanding -nostdlib -mabi=ilp32 -march=rv32i

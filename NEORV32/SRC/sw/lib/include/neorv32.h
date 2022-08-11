@@ -50,7 +50,7 @@ extern "C" {
 
 // Standard libraries
 #include <stdint.h>
-#include <inttypes.h>
+#include <int_types.h>
 #include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>

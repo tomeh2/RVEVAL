@@ -49,7 +49,7 @@ ASM_INC ?= -I .
 EFFORT ?= -Os
 
 # Compiler toolchain
-RISCV_PREFIX ?= riscv64-unknown-elf-
+RISCV_PREFIX ?= riscv32-elf-
 
 # CPU architecture and ABI
 MARCH ?= rv32i
@@ -124,8 +124,8 @@ CC_X86 = gcc -Wall -O -g
 IMAGE_GEN = $(NEORV32_EXG_PATH)/image_gen
 
 # Compiler & linker flags
-CC_OPTS  = -march=$(MARCH) -mabi=$(MABI) $(EFFORT) -Wall -ffunction-sections -fdata-sections -nostartfiles -mno-fdiv
-CC_OPTS += -Wl,--gc-sections -lm -lc -lgcc -lc
+CC_OPTS  = -march=$(MARCH) -ffreestanding -mabi=$(MABI) $(EFFORT) -Wall -ffunction-sections -fdata-sections -nostartfiles -I/home/koncarevac/github/f32c/src/include
+CC_OPTS += -Wl,--gc-sections 
 CC_OPTS += $(USER_FLAGS)
 
 
@@ -165,25 +165,25 @@ $(IMAGE_GEN): $(NEORV32_EXG_PATH)/image_gen.c
 # -----------------------------------------------------------------------------
 # Compile app *.s sources (assembly)
 %.s.o: %.s
-	@$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(ASM_INC) $< -o $@
+	$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(ASM_INC) $< -o $@
 
 # Compile app *.S sources (assembly + C pre-processor)
 %.S.o: %.S
-	@$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(ASM_INC) $< -o $@
+	$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(ASM_INC) $< -o $@
 
 # Compile app *.c sources
 %.c.o: %.c
-	@$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(APP_INC) $< -o $@
+	$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(APP_INC) $< -o $@
 
 # Compile app *.cpp sources
 %.cpp.o: %.cpp
-	@$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(APP_INC) $< -o $@
+	$(CC) -c $(CC_OPTS) -I $(NEORV32_INC_PATH) $(APP_INC) $< -o $@
 
 # Link object files and show memory utilization
 main.elf: $(OBJ)
-	@$(CC) $(CC_OPTS) -T $(LD_SCRIPT) $(OBJ) -o $@ -lm
-	@echo "Memory utilization:"
-	@$(SIZE) main.elf
+	riscv32-elf-ld $(CC_OPTS) -N -T $(LD_SCRIPT) $(OBJ) --library-path=/home/koncarevac/github/f32c/src/lib/riscv -o $@
+	echo "Memory utilization:"
+	$(SIZE) main.elf
 
 # Assembly listing file (for debugging)
 $(APP_ASM): main.elf

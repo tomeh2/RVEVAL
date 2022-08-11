@@ -1,4 +1,4 @@
-TOOLCHAIN_PREFIX := riscv32-unknown-elf-
+TOOLCHAIN_PREFIX := riscv32-elf-
 PYTHON := python
 
 CFLAGS := -ffreestanding -nostdlib -mabi=ilp32 -march=rv32i
@@ -23,7 +23,7 @@ firmware.bin: firmware.elf
 firmware.elf: $(FIRMWARE_OBJS)
 	$(CC) -Os -mabi=ilp32 -march=rv32i -ffreestanding -nostdlib -o $@ \
 		-Wl,--build-id=none,-Bstatic,-T,sections.lds,--strip-debug \
-		$(FIRMWARE_OBJS) -lgcc
+		$(FIRMWARE_OBJS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
@@ -36,9 +36,9 @@ decomp:
 	$(TOOLCHAIN_PREFIX)objdump firmware.elf -d --disassemble-all > decomp
 
 clean:
-	del *.o
-	del *.hex
-	del *.elf
-	del *.bin
-	del decomp
-	del sects
+	rm -r *.o
+	rm -r *.hex
+	rm -r *.elf
+	rm -r *.bin
+	rm -r decomp
+	rm -r sects
