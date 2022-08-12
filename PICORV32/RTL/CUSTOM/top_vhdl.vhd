@@ -7,6 +7,14 @@ entity top_vhdl is
 end top_vhdl;
 
 architecture structural of top_vhdl is
+    -- Top 8 bits of the address that are used in address decoding. For ex. if SDRAM_ADDR_TOP has a value of 0x30 then accessing addresses whose top 8 bits
+    -- are 0x30 will access SDRAM
+    constant ROM_ADDR_TOP : std_logic_vector(7 downto 0) := X"00";
+    constant BRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"10";
+    constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
+    constant UART_ADDR_TOP : std_logic_vector(7 downto 0) := X"30";
+    constant GPIO_ADDR_TOP : std_logic_vector(7 downto 0) := X"40";
+
     signal bus_valid, bus_instr, bus_ready : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
     signal bus_wstrb : std_logic_vector(3 downto 0);
@@ -251,15 +259,15 @@ begin
 					
         if (bus_valid = '1') then
 			case bus_addr(31 downto 24) is
-				when X"00" =>
+				when ROM_ADDR_TOP =>
 					bus_rdata <= rom_bus_rdata;
 					rom_cs <= '1';
-				when X"10" => 
+				when BRAM_ADDR_TOP => 
 					bus_rdata <= ram_bus_rdata;
 					ram_cs <= '1';
-				when X"20" =>
+				when SDRAM_ADDR_TOP =>
 					bus_rdata <= sdram_bus_rdata;
-				when X"30" =>
+				when UART_ADDR_TOP =>
 					if (bus_addr(23 downto 0) = X"000000") then
 						if (bus_wstrb = "0000") then
 							bus_rdata <= uart_reg_div_do;
@@ -276,7 +284,7 @@ begin
 						uart_reg_dat_re <= '1';
 						uart_bus_ready <= '1';
 					end if;
-				when X"40" => 
+				when GPIO_ADDR_TOP => 
 					bus_rdata <= gpio_bus_rdata;
 					gpio_cs <= '1';
 				when others => 
@@ -292,7 +300,7 @@ begin
                 test_state <= "00";
             else
                 if (test_state = "00") then
-                    if (bus_addr(31 downto 24) = X"20" and bus_valid = '1') then
+                    if (bus_addr(31 downto 24) = SDRAM_ADDR_TOP and bus_valid = '1') then
                         test_state <= "01";
                     else
                         test_state <= "00";
