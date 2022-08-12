@@ -39,20 +39,36 @@ architecture structural of top_synth is
      );
     end component;
 
+    -- Top 8 bits of the address that are used in address decoding. For ex. if SDRAM_ADDR_TOP has a value of 0x30 then accessing addresses whose top 8 bits
+    -- are 0x30 will access SDRAM
+    
+    -- NOTE: XILINX boards do not have built-in SDRAM, so it has been replaced with a large BRAM
+    constant ROM_ADDR_TOP : std_logic_vector(7 downto 0) := X"00";
+    constant BRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"10";
+    constant UART_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
+    constant GPIO_ADDR_TOP : std_logic_vector(7 downto 0) := X"30";
+
     signal bus_valid, bus_instr, bus_ready : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
     signal bus_wstrb : std_logic_vector(3 downto 0);
     
     signal irq : std_logic_vector(31 downto 0) := (others => '0');
     
-    signal clk, clk_locked, resetn : std_logic;
+    signal clk, clk_sdram, clk_locked, resetn, reset : std_logic;
     
     signal gpio_bus_rdata : std_logic_vector(31 downto 0);
     signal gpio_bus_ready, gpio_cs : std_logic;
     
-    signal ram_bus_rdata : std_logic_vector(31 downto 0);
+    signal rom_bus_rdata : std_logic_vector(31 downto 0);
+    signal rom_bus_ready, rom_cs : std_logic;
+	
+	signal ram_bus_rdata : std_logic_vector(31 downto 0);
     signal ram_bus_ready, ram_cs : std_logic;
-    
+
+	signal uart_reg_div_we : std_logic_vector(3 downto 0);
+    signal uart_reg_div_di, uart_reg_div_do, uart_reg_dat_di, uart_reg_dat_do : std_logic_vector(31 downto 0);
+    signal uart_reg_dat_we, uart_reg_dat_re, uart_reg_dat_wait, uart_bus_ready : std_logic;
+	
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
 begin
     clk_wiz : clk_wiz_0
@@ -63,7 +79,7 @@ begin
              locked => clk_locked);
 
     picorv32 : entity work.picorv32(picorv32)
-               generic map(STACKADDR => X"0000_0200",
+               generic map(STACKADDR => X"1000_8000",
                            PROGADDR_RESET => X"0000_0000",
                            PROGADDR_IRQ => X"FFFF_FFFF",
                            BARREL_SHIFTER => 1,
@@ -107,9 +123,19 @@ begin
                     clk => clk,
                     resetn => resetn);
                     
+	rom : entity work.rom_memory(rtl)
+		  generic map(SIZE_BYTES => 4096)
+		  port map(bus_addr => bus_addr(11 downto 0),
+				   bus_rdata => rom_bus_rdata,
+				   bus_ready => rom_bus_ready,
+				   
+				   en => rom_cs,
+				   clk => clk,
+				   resetn => resetn);
+					
     ram : entity work.ram_memory(rtl)
-          generic map(SIZE => 512)
-          port map(bus_addr => bus_addr(10 downto 0),
+          generic map(SIZE_BYTES => 32768)
+          port map(bus_addr => bus_addr(11 downto 0),
                    bus_wdata => bus_wdata,
                    bus_rdata => ram_bus_rdata,
                    bus_wstrb => bus_wstrb,
@@ -119,24 +145,72 @@ begin
                    clk => clk,
                    resetn => resetn);
            
+    uart : simpleuart
+		port map(clk => clk,
+        resetn => resetn,
+                    
+        ser_tx => ftdi_rxd,
+        ser_rx => ftdi_txd,
+                    
+        reg_div_we => uart_reg_div_we,
+        reg_div_di => bus_wdata,
+        reg_div_do => uart_reg_div_do,
+                    
+        reg_dat_we => uart_reg_dat_we,
+        reg_dat_re => uart_reg_dat_re,
+                    
+        reg_dat_di => bus_wdata,
+        reg_dat_do => uart_reg_dat_do,
+                   
+        reg_dat_wait => uart_reg_dat_wait);
 
     -- ADDRESS DECODING
-    process(all)
+    process(bus_valid, bus_addr, bus_wstrb, gpio_bus_rdata, rom_bus_rdata, ram_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
     begin
-        bus_rdata <= (others => '0');
-        gpio_cs <= '0';
-        ram_cs <= '0';
-    
+		bus_rdata <= (others => '0');
+		gpio_cs <= '0';
+		rom_cs <= '0';
+		ram_cs <= '0';	
+		
+		uart_reg_div_we <= (others => '0');
+		uart_reg_dat_we <= '0';
+		uart_reg_dat_re <= '0';
+		uart_bus_ready <= '0';
+	
         if (bus_valid = '1') then
-            if (bus_addr(31 downto 16) = X"0000") then
-                bus_rdata <= ram_bus_rdata;
-                ram_cs <= '1';
-            elsif (bus_addr(31 downto 16) = X"0001") then
-                bus_rdata <= gpio_bus_rdata;
-                gpio_cs <= '1';
-            end if;
+			case bus_addr(31 downto 24) is
+				when ROM_ADDR_TOP =>
+					bus_rdata <= rom_bus_rdata;
+					rom_cs <= '1';
+				when BRAM_ADDR_TOP => 
+					bus_rdata <= ram_bus_rdata;
+					ram_cs <= '1';
+				when UART_ADDR_TOP =>
+					if (bus_addr(23 downto 0) = X"000000") then
+						if (bus_wstrb = "0000") then
+							bus_rdata <= uart_reg_div_do;
+							uart_bus_ready <= '1';
+						else
+							uart_reg_div_we <= "1111";
+							uart_bus_ready <= '1';
+						end if;
+					elsif (bus_addr(23 downto 0) = X"000004") then
+						uart_reg_dat_we <= '1';
+						uart_bus_ready <= not uart_reg_dat_wait;
+					elsif (bus_addr(23 downto 0) = X"000008") then
+						bus_rdata <= uart_reg_dat_do;
+						uart_reg_dat_re <= '1';
+						uart_bus_ready <= '1';
+					end if;
+				when GPIO_ADDR_TOP => 
+					bus_rdata <= gpio_bus_rdata;
+					gpio_cs <= '1';
+				when others => 
+					
+			end case;
         end if;
     end process;
+
 
     resetn <= not CPU_RESET and clk_locked;
      
