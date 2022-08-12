@@ -5,17 +5,6 @@ extern int main();
 extern char rom_prog_start;
 extern char rom_prog_end;
 
-char hexMap[16] = "0123456789ABCDEF";
-
-void format_hex(unsigned int num, char* dest)
-{
-	for (int i = 0; i < 8; i++)
-	{
-		*(dest + 7 - i) = *(hexMap + (num & 0x0000000F));
-		num >>= 4;
-	}
-}
-
 int bootloader_entry()
 {
 	uart_init();
@@ -47,4 +36,6 @@ int bootloader_entry()
 	uart_puts("Done! Starting program\n");
 
 	main();
+	
+	while (1);
 }

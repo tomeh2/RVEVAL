@@ -10,6 +10,17 @@ static volatile unsigned int* uart_div_reg = (unsigned int*) 0x30000000;
 static volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x30000004;
 static volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x30000008;
 
+char hexMap[16] = "0123456789ABCDEF";
+
+void format_hex(unsigned int num, char* dest)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		*(dest + 7 - i) = *(hexMap + (num & 0x0000000F));
+		num >>= 4;
+	}
+}
+
 void uart_init()
 {
 	unsigned int uart_div = CLK_SPEED / BAUD_RATE;

@@ -1,16 +1,12 @@
 #include "uart.h"
 
 unsigned int* bram_start_addr = (unsigned int*) 0x10000000;
-const unsigned int BRAM_SIZE_WORDS = 1024;
+const unsigned int BRAM_SIZE_WORDS = 512;
 
 unsigned int* sdram_start_addr = (unsigned int*) 0x20001000;
-const unsigned int SDRAM_SIZE_WORDS = 32768;		//We are not testing the whole SDRAM
+const unsigned int SDRAM_SIZE_WORDS = 131072;		//We are not testing the whole SDRAM
 
 unsigned int* gpio_o = (unsigned int*) 0x30000004;
-
-extern char* hexMap;
-
-extern void format_hex(unsigned int num, char* dest);
 
 int test_bram()
 {
@@ -43,6 +39,7 @@ int test_bram()
 		
 			return -1;
 		}
+		bram_curr_addr++;
 	}
 	uart_puts("BRAM check finished without errors!\r\n");
 	return 0;
@@ -79,6 +76,7 @@ int test_sdram()
 		
 			return -1;
 		}
+		sdram_curr_addr++;
 	}
 	uart_puts("SDRAM check finished without errors!\r\n");
 	return 0;
