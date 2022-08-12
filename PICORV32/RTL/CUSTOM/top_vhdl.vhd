@@ -236,7 +236,7 @@ begin
     sdram_dqm <= sdram_dqmh & sdram_dqml;
 
     -- ADDRESS DECODING
-    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
+    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do, uart_reg_dat_wait, ram_bus_rdata)
     begin
         bus_rdata <= (others => '0');
 		gpio_cs <= '0';

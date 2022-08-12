@@ -258,7 +258,7 @@ begin
         reg_dat_wait => uart_reg_dat_wait);
            
     -- ADDRESS DECODING
-    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
+    process(bus_valid, bus_addr, bus_wstrb, sdram_bus_rdata, gpio_bus_rdata, rom_bus_rdata, ram_bus_rdata, uart_reg_div_do, uart_reg_dat_wait)
     begin
 		bus_rdata <= (others => '0');
 		gpio_cs <= '0';
