@@ -85,7 +85,7 @@ module picorv32 #(
 	parameter [31:0] LATCHED_IRQ = 32'h ffff_ffff,
 	parameter [31:0] PROGADDR_RESET = 32'h 0000_0000,
 	parameter [31:0] PROGADDR_IRQ = 32'h 0000_0000,
-	parameter [31:0] STACKADDR = 32'h 1000_1000
+	parameter [31:0] STACKADDR = 32'h 2000_1000
 ) (
 	input clk, resetn,
 	output reg trap,
