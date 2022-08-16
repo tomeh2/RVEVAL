@@ -14,11 +14,10 @@ architecture structural of top_vhdl is
     constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
     constant IO_BASE_ADDR : std_logic_vector(20 downto 0) := "111111111111111111111";		-- 0xfffff8
 	
-	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "00000000000";			-- 0x000
+	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "11100010000";			-- 0x710        -- LEDs
 	constant IO_GPIO_CTL_ADDR : std_logic_vector(10 downto 0) := "00000000100";			-- 0x004
 	
-	constant IO_UART_DATA_ADDR : std_logic_vector(10 downto 0) := "01100000000";			-- 0x300
-	constant IO_UART_STATUS_ADDR : std_logic_vector(10 downto 0) := "01100000001";			-- 0x301
+	constant IO_UART_DATA_STATUS_ADDR : std_logic_vector(10 downto 0) := "01100000000";			-- 0x300 (1st Byte = DATA | 2nd Byte = STATUS)
 	constant IO_UART_BAUD_ADDR : std_logic_vector(10 downto 0) := "01100000010";			-- 0x302
 
     signal bus_valid, bus_instr, bus_ready : std_logic;
@@ -29,6 +28,7 @@ architecture structural of top_vhdl is
     
     signal clk, resetn, reset, sdram_we, ser_tx, ser_rx : std_logic;
     
+    signal uart_sim_bit : std_logic;
     signal uart_reg_div_we : std_logic_vector(3 downto 0);
     signal uart_reg_div_di, uart_reg_div_do, uart_reg_dat_di, uart_reg_dat_do : std_logic_vector(31 downto 0);
     signal uart_reg_dat_we, uart_reg_dat_re, uart_reg_dat_wait, uart_bus_ready : std_logic;
@@ -284,24 +284,31 @@ begin
 								uart_reg_div_we <= "1111";
 								uart_bus_ready <= '1';
 							end if;
-						elsif (bus_addr(10 downto 0) = IO_UART_DATA_ADDR) then
+						elsif (bus_addr(10 downto 0) = IO_UART_DATA_STATUS_ADDR) then
 							if (bus_wstrb = "0000") then
-								bus_rdata <= uart_reg_dat_do;
+								bus_rdata(7 downto 0) <= uart_reg_dat_do(0) &
+								                         uart_reg_dat_do(1) &
+								                         uart_reg_dat_do(2) &
+								                         uart_reg_dat_do(3) &
+								                         uart_reg_dat_do(4) &
+								                         uart_reg_dat_do(5) &
+								                         uart_reg_dat_do(6) &
+								                         uart_reg_dat_do(7);
 								uart_reg_dat_re <= '1';
-								uart_bus_ready <= '1';
+								
+								bus_rdata(15 downto 8) <= "0000000" & uart_sim_bit;
+							    uart_bus_ready <= '1';
 							else
 								uart_reg_dat_we <= '1';
 								uart_bus_ready <= not uart_reg_dat_wait;
 							end if;
-						elsif (bus_addr(10 downto 0) = IO_UART_STATUS_ADDR) then
-							bus_rdata <= X"0000_0000";
-							uart_bus_ready <= '1';
-						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
-							bus_rdata <= gpio_bus_rdata;
-							gpio_cs <= '1';
-						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
-							bus_rdata <= gpio_bus_rdata;
-							gpio_cs <= '1';
+						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR and bus_wstrb = "0001") then
+						    if (bus_wstrb = "0000") then
+						        bus_rdata <= gpio_bus_rdata;
+							    gpio_cs <= '1';
+						    else
+						        gpio_cs <= '1';
+						    end if;
 						end if;
 					end if;
 					when others => 
@@ -367,6 +374,24 @@ begin
 
     gpio_i <= X"1111_1111";
     bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready or ram_bus_ready;
+    
+    process
+    begin
+        ser_rx <= '1';
+        wait for 500us;
+        ser_rx <= '0';
+        wait for 200ns;
+        ser_rx <= '1';
+        wait for 1sec;
+    end process;
+    
+    process
+    begin
+        uart_sim_bit <= '0';
+        wait for 100us;
+        uart_sim_bit <= '1';
+        wait for 1ms;
+    end process;
     
     sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
     

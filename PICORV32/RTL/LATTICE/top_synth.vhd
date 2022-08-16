@@ -128,7 +128,7 @@ architecture structural of top_synth is
     constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
     constant IO_BASE_ADDR : std_logic_vector(20 downto 0) := "111111111111111111111";		-- 0xfffff8
 	
-	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "00000000000";			-- 0x000
+	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "11100010000";			-- 0x710
 	constant IO_GPIO_CTL_ADDR : std_logic_vector(10 downto 0) := "00000000100";			-- 0x004
 	
 	constant IO_UART_DATA_ADDR : std_logic_vector(10 downto 0) := "01100000000";			-- 0x300
@@ -318,9 +318,6 @@ begin
 						elsif (bus_addr(10 downto 0) = IO_UART_STATUS_ADDR) then
 							bus_rdata <= X"0000_0000";
 							uart_bus_ready <= '1';
-						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
-							bus_rdata <= gpio_bus_rdata;
-							gpio_cs <= '1';
 						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
 							bus_rdata <= gpio_bus_rdata;
 							gpio_cs <= '1';
