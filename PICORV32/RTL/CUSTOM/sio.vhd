@@ -87,18 +87,18 @@ architecture Behavioral of sio is
     signal R_baudgen: std_logic_vector(16 downto 0);
 
     -- transmit logic
-    signal tx_tickcnt: std_logic_vector(3 downto 0);
-    signal tx_phase: std_logic_vector(3 downto 0);
-    signal tx_running: std_logic;
+    signal tx_tickcnt: std_logic_vector(3 downto 0) := (others => '0');
+    signal tx_phase: std_logic_vector(3 downto 0) := (others => '0');
+    signal tx_running: std_logic := '0';
     signal tx_ser: std_logic_vector(8 downto 0) := (others => '1');
 
     -- receive logic
     signal R_rxd, R_break: std_logic;
-    signal rx_tickcnt: std_logic_vector(3 downto 0);
-    signal rx_des: std_logic_vector(7 downto 0);
-    signal rx_phase: std_logic_vector(3 downto 0);
-    signal rx_byte: std_logic_vector(7 downto 0);
-    signal rx_full: std_logic;
+    signal rx_tickcnt: std_logic_vector(3 downto 0) := (others => '0');
+    signal rx_des: std_logic_vector(7 downto 0) := (others => '0');
+    signal rx_phase: std_logic_vector(3 downto 0) := (others => '0');
+    signal rx_byte: std_logic_vector(7 downto 0) := (others => '0');
+    signal rx_full: std_logic := '0';
     signal rx_break_tickcnt: std_logic_vector(C_break_detect_bits-1 downto 0) := C_break_detect_start;
 begin
 
@@ -128,9 +128,9 @@ begin
     --
 
     tx_running <= '1' when tx_phase /= x"0" else '0';
-    bus_out(31 downto 11) <= "---------------------";
+    bus_out(31 downto 11) <= "--------------------0";
     bus_out(10) <= tx_running;
-    bus_out(9 downto 8) <= '-' & rx_full when not C_tx_only else "--";
+    bus_out(9 downto 8) <= '0' & rx_full when not C_tx_only else "00";
     bus_out(7 downto 0) <= rx_byte when not C_tx_only else "--------";
     txd <= tx_ser(0);
     break <= R_break;
@@ -140,23 +140,23 @@ begin
 	if rising_edge(clk) then
 	    -- bus interface logic
 	    if ce = '1' then
-		if not C_fixed_baudrate and bus_write = '1' and
-		  byte_sel(2) = '1' then
-		    if C_big_endian then
-			R_baudrate <=
-			  bus_in(23 downto 16) & bus_in(31 downto 24);
-		    else
-			R_baudrate <= bus_in(31 downto 16);
-		    end if;
-		end if;
-		if bus_write = '1' and byte_sel(0) = '1' then
-		    if tx_phase = x"0" then
-			tx_phase <= x"1";
-			tx_ser <= bus_in(7 downto 0) & '0';
-		    end if;
-		elsif bus_write = '0' and byte_sel(0) = '1' then
-		    rx_full <= '0';
-		end if;
+            if not C_fixed_baudrate and bus_write = '1' and
+              byte_sel(2) = '1' then
+                if C_big_endian then
+                R_baudrate <=
+                  bus_in(23 downto 16) & bus_in(31 downto 24);
+                else
+                R_baudrate <= bus_in(31 downto 16);
+                end if;
+            end if;
+            if bus_write = '1' and byte_sel(0) = '1' then
+                if tx_phase = x"0" then
+                tx_phase <= x"1";
+                tx_ser <= bus_in(7 downto 0) & '0';
+                end if;
+            elsif bus_write = '0' and byte_sel(0) = '1' then
+                rx_full <= '0';
+            end if;
 	    end if;
 
 	    -- baud generator

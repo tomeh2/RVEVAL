@@ -49,6 +49,8 @@ architecture structural of top_vhdl is
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
     
+    signal we : std_logic;
+    
     signal sdram_a : unsigned(12 downto 0);
     signal sdram_ba : unsigned(1 downto 0);
     signal sdram_dq : std_logic_vector(15 downto 0);
@@ -227,6 +229,7 @@ begin
                                  We_n => sdram_we_n,
                                  Dqm => sdram_dqm);
 
+    /*
     uart : simpleuart
            port map(clk => clk,
                     resetn => resetn,
@@ -245,7 +248,19 @@ begin
                     reg_dat_do => uart_reg_dat_do,
                     
                     reg_dat_wait => uart_reg_dat_wait
-                    );
+                    );*/
+                    
+    sio_inst : entity work.sio(Behavioral)
+               generic map(C_clk_freq => 50)
+               port map(bus_write => we,
+                        byte_sel => bus_wstrb,
+                        bus_in => bus_wdata,
+                        bus_out => uart_reg_div_do,
+                        break => open,
+                        rxd => ser_rx,
+                        txd => ser_tx,
+                        ce => uart_reg_dat_re or uart_reg_dat_we,
+                        clk => clk);
 
     sdram_dqm <= sdram_dqmh & sdram_dqml;
 
@@ -286,21 +301,14 @@ begin
 							end if;
 						elsif (bus_addr(10 downto 0) = IO_UART_DATA_STATUS_ADDR) then
 							if (bus_wstrb = "0000") then
-								bus_rdata(7 downto 0) <= uart_reg_dat_do(0) &
-								                         uart_reg_dat_do(1) &
-								                         uart_reg_dat_do(2) &
-								                         uart_reg_dat_do(3) &
-								                         uart_reg_dat_do(4) &
-								                         uart_reg_dat_do(5) &
-								                         uart_reg_dat_do(6) &
-								                         uart_reg_dat_do(7);
+								bus_rdata <= uart_reg_div_do;
 								uart_reg_dat_re <= '1';
 								
-								bus_rdata(15 downto 8) <= "0000000" & uart_sim_bit;
+								--bus_rdata(15 downto 8) <= "0000000" & uart_sim_bit;
 							    uart_bus_ready <= '1';
 							else
+							    uart_bus_ready <= '1';
 								uart_reg_dat_we <= '1';
-								uart_bus_ready <= not uart_reg_dat_wait;
 							end if;
 						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR and bus_wstrb = "0001") then
 						    if (bus_wstrb = "0000") then
@@ -380,7 +388,7 @@ begin
         ser_rx <= '1';
         wait for 500us;
         ser_rx <= '0';
-        wait for 200ns;
+        wait for 100us;
         ser_rx <= '1';
         wait for 1sec;
     end process;
@@ -395,6 +403,7 @@ begin
     
     sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
     
+    we <= '1' when bus_wstrb /= "0000" else '0';
     sdram_we <= '1' when bus_wstrb /= "0000" else '0'; 
 
 end structural;
