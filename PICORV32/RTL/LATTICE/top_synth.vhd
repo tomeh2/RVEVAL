@@ -126,8 +126,15 @@ architecture structural of top_synth is
     constant ROM_ADDR_TOP : std_logic_vector(7 downto 0) := X"00";
     constant BRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"10";
     constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
-    constant UART_ADDR_TOP : std_logic_vector(7 downto 0) := X"30";
-    constant GPIO_ADDR_TOP : std_logic_vector(7 downto 0) := X"40";
+    constant IO_BASE_ADDR : std_logic_vector(20 downto 0) := "111111111111111111111";		-- 0xfffff8
+	
+	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "00000000000";			-- 0x000
+	constant IO_GPIO_CTL_ADDR : std_logic_vector(10 downto 0) := "00000000100";			-- 0x004
+	
+	constant IO_UART_DATA_ADDR : std_logic_vector(10 downto 0) := "01100000000";			-- 0x300
+	constant IO_UART_STATUS_ADDR : std_logic_vector(10 downto 0) := "01100000001";			-- 0x301
+	constant IO_UART_BAUD_ADDR : std_logic_vector(10 downto 0) := "01100000010";			-- 0x302
+	
 
     signal bus_valid, bus_instr, bus_ready : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
@@ -289,27 +296,37 @@ begin
 					ram_cs <= '1';
 				when SDRAM_ADDR_TOP =>
 					bus_rdata <= sdram_bus_rdata;
-				when UART_ADDR_TOP =>
-					if (bus_addr(23 downto 0) = X"000000") then
-						if (bus_wstrb = "0000") then
-							bus_rdata <= uart_reg_div_do;
+				when X"FF" => 
+					if (bus_addr(31 downto 11) = IO_BASE_ADDR) then
+						if (bus_addr(10 downto 0) = IO_UART_BAUD_ADDR) then
+							if (bus_wstrb = "0000") then
+								bus_rdata <= uart_reg_div_do;
+								uart_bus_ready <= '1';
+							else
+								uart_reg_div_we <= "1111";
+								uart_bus_ready <= '1';
+							end if;
+						elsif (bus_addr(10 downto 0) = IO_UART_DATA_ADDR) then
+							if (bus_wstrb = "0000") then
+								bus_rdata <= uart_reg_dat_do;
+								uart_reg_dat_re <= '1';
+								uart_bus_ready <= '1';
+							else
+								uart_reg_dat_we <= '1';
+								uart_bus_ready <= not uart_reg_dat_wait;
+							end if;
+						elsif (bus_addr(10 downto 0) = IO_UART_STATUS_ADDR) then
+							bus_rdata <= X"0000_0000";
 							uart_bus_ready <= '1';
-						else
-							uart_reg_div_we <= "1111";
-							uart_bus_ready <= '1';
+						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
+							bus_rdata <= gpio_bus_rdata;
+							gpio_cs <= '1';
+						elsif (bus_addr(10 downto 0) = IO_GPIO_DATA_ADDR) then
+							bus_rdata <= gpio_bus_rdata;
+							gpio_cs <= '1';
 						end if;
-					elsif (bus_addr(23 downto 0) = X"000004") then
-						uart_reg_dat_we <= '1';
-						uart_bus_ready <= not uart_reg_dat_wait;
-					elsif (bus_addr(23 downto 0) = X"000008") then
-						bus_rdata <= uart_reg_dat_do;
-						uart_reg_dat_re <= '1';
-						uart_bus_ready <= '1';
 					end if;
-				when GPIO_ADDR_TOP => 
-					bus_rdata <= gpio_bus_rdata;
-					gpio_cs <= '1';
-				when others => 
+					when others => 
 					
 			end case;
         end if;
