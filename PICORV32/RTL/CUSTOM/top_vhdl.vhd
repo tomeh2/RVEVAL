@@ -11,7 +11,7 @@ architecture structural of top_vhdl is
     -- are 0x30 will access SDRAM
     constant ROM_ADDR_TOP : std_logic_vector(7 downto 0) := X"00";
     constant BRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"10";
-    constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"80";
+    constant SDRAM_ADDR_TOP : std_logic_vector(3 downto 0) := X"8";
     constant IO_BASE_ADDR : std_logic_vector(20 downto 0) := "111111111111111111111";		-- 0xfffff8
 	
 	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "11100010000";			-- 0x710        -- LEDs
@@ -255,7 +255,7 @@ begin
     sdram_controller: sdrc_top
 				      port map(sdram_clk => clk,
 								sdram_resetn => resetn,
-								cfg_sdr_width => "11",
+								cfg_sdr_width => "01",
 								cfg_colbits => "01",
 								
 								wb_rst_i => reset,
@@ -267,7 +267,7 @@ begin
 								wb_dat_i => bus_wdata,
 								wb_sel_i => bus_wstrb,
 								wb_dat_o => sdram_bus_rdata,
-								wb_cyc_i => '1',
+								wb_cyc_i => sdram_cs,
 								wb_cti_i => "000",
 								
 								sdr_cke => sdram_cke,
@@ -275,24 +275,26 @@ begin
 								sdr_ras_n => sdram_ras_n,
 								sdr_cas_n => sdram_cas_n,
 								sdr_we_n => sdram_we_n,
-								sdr_dqm => sdram_dqm,
+								sdr_dqm => open,
 								sdr_ba => sdram_ba,
 								sdr_addr => sdram_a,
 								sdr_dq => sdram_dq,
 								
 								sdr_init_done => sdram_init_done,
-								cfg_sdr_tras_d => "1000",
-								cfg_sdr_trp_d => "1000",
-								cfg_sdr_trcd_d => "1000",
+								cfg_sdr_tras_d => "1100",
+								cfg_sdr_trp_d => "1100",
+								cfg_sdr_trcd_d => "1100",
 								cfg_sdr_en => '1', 
-								cfg_req_depth => "00",
+								cfg_req_depth => "01",
 								cfg_sdr_mode_reg => "0000000000000",
-								cfg_sdr_cas => "100",
-								cfg_sdr_trcar_d => "1000",
-								cfg_sdr_twr_d => "1000",
-								cfg_sdr_rfsh => "000000100000",
+								cfg_sdr_cas => "110",
+								cfg_sdr_trcar_d => "1100",
+								cfg_sdr_twr_d => "1100",
+								cfg_sdr_rfsh => "000010000000",
 								cfg_sdr_rfmax => "100" 
 								);
+                    
+    sdram_dqm <= "11";
                     
     sdram_au <= unsigned(sdram_a);
     mt48lc16m16a2_dev : mt48lc16m16a2
@@ -340,7 +342,7 @@ begin
                         ce => uart_reg_dat_re or uart_reg_dat_we,
                         clk => clk);
 
-    sdram_dqm <= sdram_dqmh & sdram_dqml;
+    --sdram_dqm <= sdram_dqmh & sdram_dqml;
 
     -- ADDRESS DECODING
     -- ADDRESS DECODING
@@ -365,7 +367,7 @@ begin
 				when BRAM_ADDR_TOP => 
 					bus_rdata <= ram_bus_rdata;
 					ram_cs <= '1';
-				when SDRAM_ADDR_TOP =>
+				when SDRAM_ADDR_TOP & "0000" =>
 					bus_rdata <= sdram_bus_rdata;
 				when X"FF" => 
 					if (bus_addr(31 downto 11) = IO_BASE_ADDR) then
@@ -410,24 +412,30 @@ begin
                 test_state <= "00";
             else
                 if (test_state = "00") then
-                    if (bus_addr(31 downto 24) = SDRAM_ADDR_TOP and bus_valid = '1') then
+                    if (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb = "0000") then
+                        test_state <= "11";
+                    elsif (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb /= "0000") then
                         test_state <= "01";
                     else
                         test_state <= "00";
                     end if;
                 elsif (test_state = "01") then
-                    if (sdram_ack = '1' and bus_wstrb = "0000") then
-                        test_state <= "10";
-                    elsif (sdram_ack = '1' and bus_wstrb /= "0000") then
+                    if (sdram_ack = '1') then
                         test_state <= "00";
                     else
-                        test_state <= "01";
+                        test_state <= "10";
+                    end if;
+                elsif (test_state = "10") then
+                    if (sdram_ack = '1') then
+                        test_state <= "00";
+                    else
+                        test_state <= "10";
                     end if;
                 else
-                    if (sdram_valid = '1') then
+                    if (sdram_ack = '1') then
                         test_state <= "00";
                     else
-                        test_state <= "10";
+                        test_state <= "11";
                     end if;
                 end if;
             end if;
@@ -438,25 +446,22 @@ begin
     begin
         if (test_state = "00") then
             sdram_cs_read <= '0';
-        elsif (test_state = "01") then
+        elsif (test_state = "01" or test_state = "11") then
             sdram_cs_read <= '1';
         else
             sdram_cs_read <= '0';
         end if;
     end process;
     
-    sdram_cs_proc_3 : process(test_state, bus_wstrb, sdram_cs_read)
+    sdram_cs_proc_3 : process(test_state)
     begin
-        if (test_state /= "00") then
-            if (bus_wstrb = "0000") then
-                sdram_cs <= sdram_cs_read;
-            else 
-                sdram_cs <= '1';
-            end if;
+        if (test_state = "01") then
+            sdram_cs <= '1';
         else
             sdram_cs <= '0';
         end if;
-    end process; 
+    end process;
+    --sdram_cs <= '1' when bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' else '0';
 
     gpio_i <= X"1111_1111";
     bus_ready <= gpio_bus_ready or rom_bus_ready or sdram_bus_ready or uart_bus_ready or ram_bus_ready;

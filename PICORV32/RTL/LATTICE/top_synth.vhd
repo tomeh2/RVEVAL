@@ -290,7 +290,7 @@ begin
 								wb_dat_i => bus_wdata,
 								wb_sel_i => bus_wstrb,
 								wb_dat_o => sdram_bus_rdata,
-								wb_cyc_i => '1',
+								wb_cyc_i => sdram_cs,
 								wb_cti_i => "000",
 								
 								sdr_cke => sdram_cke,
@@ -308,7 +308,7 @@ begin
 								cfg_sdr_trp_d => "1000",
 								cfg_sdr_trcd_d => "1000",
 								cfg_sdr_en => '1', 
-								cfg_req_depth => "00",
+								cfg_req_depth => "01",
 								cfg_sdr_mode_reg => "0000000000000",
 								cfg_sdr_cas => "100",
 								cfg_sdr_trcar_d => "1000",
