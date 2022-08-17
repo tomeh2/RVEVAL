@@ -6,7 +6,7 @@ use STD.TEXTIO.ALL;
 
 entity rom_memory is
     generic(
-        SIZE_BYTES : integer
+        SIZE_BYTES : integer := 1024
     );
     port(
         -- ========== BUS SIGNALS ==========
