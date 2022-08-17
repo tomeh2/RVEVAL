@@ -6,7 +6,7 @@ volatile unsigned int* uart_div_reg = (unsigned int*) 0x30000000;
 volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x30000004;
 volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x30000008;
 
-volatile unsigned int* sdram = (unsigned int*) 0x20000000;
+volatile unsigned int* sdram = (unsigned int*) 0x80000000;
 volatile unsigned int* gpio_o = (unsigned int*) 0x10000000;
 volatile unsigned int* gpio_i = (unsigned int*) 0x10000004;
 
@@ -41,24 +41,24 @@ void uart_puts(char* str)
 {
 	while (*str != '\0')
 	{
-		uart_putc(*str);
+		//uart_putc(*str);
 		str++;
 	}
 }
 
 void sdram_init()
 {
-	uart_puts(str1);
+	//uart_puts(str1);
 	for (int i = 0; i < SDRAM_SIZE; i++)
 	{
 		*(sdram + i) = 0xFFFF0000 + i;
 	}
-	uart_puts(str2);
+	//uart_puts(str2);
 }
 
 void sdram_check()
 {
-	uart_puts(str3);
+	//uart_puts(str3);
 	
 	char expected[9];
 	char got[9];
@@ -70,32 +70,32 @@ void sdram_check()
 	{
 		unsigned int sdramReadVal = *(sdram + i);
 		
-		format_hex(currVal, expected);
-		format_hex(sdramReadVal, got);
-		uart_puts("Expected: ");
-		uart_puts(expected);
-		uart_puts(" | Got: ");
-		uart_puts(got);
+		//format_hex(currVal, expected);
+		//format_hex(sdramReadVal, got);
+		//uart_puts("Expected: ");
+		//uart_puts(expected);
+		//uart_puts(" | Got: ");
+		//uart_puts(got);
 		
 		if (sdramReadVal != currVal)
 		{
-			uart_puts("SDRAM Error!\n");
+			//uart_puts("SDRAM Error!\n");
 			
 			return;
 		}
 		else
 		{
-			uart_puts(" | OK\n");
+			//uart_puts(" | OK\n");
 		}
 		
 		currVal++;
 	}
-	uart_puts(str4);
+	//uart_puts(str4);
 }
 
 int main()
 {
-	uart_init();
+	//uart_init();
 	
 	/*
 	*gpio_o = 0xFF;

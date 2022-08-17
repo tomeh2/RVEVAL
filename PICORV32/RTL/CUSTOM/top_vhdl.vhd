@@ -11,7 +11,7 @@ architecture structural of top_vhdl is
     -- are 0x30 will access SDRAM
     constant ROM_ADDR_TOP : std_logic_vector(7 downto 0) := X"00";
     constant BRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"10";
-    constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"20";
+    constant SDRAM_ADDR_TOP : std_logic_vector(7 downto 0) := X"80";
     constant IO_BASE_ADDR : std_logic_vector(20 downto 0) := "111111111111111111111";		-- 0xfffff8
 	
 	constant IO_GPIO_DATA_ADDR : std_logic_vector(10 downto 0) := "11100010000";			-- 0x710        -- LEDs
@@ -479,7 +479,7 @@ begin
         wait for 1ms;
     end process;
     
-    sdram_bus_ready <= sdram_ack when sdram_we = '1' else sdram_valid;
+    sdram_bus_ready <= sdram_ack;
     
     we <= '1' when bus_wstrb /= "0000" else '0';
     sdram_we <= '1' when bus_wstrb /= "0000" else '0'; 

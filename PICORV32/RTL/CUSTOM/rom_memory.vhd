@@ -29,7 +29,8 @@ architecture rtl of rom_memory is
     type rom_type is array (0 to SIZE_BYTES / 4 - 1) of std_logic_vector(31 downto 0);
 
     impure function init_rom_hex return rom_type is
-        file text_file : text open read_mode is "../../../../f32c/src/boot/sio/loader.hex";
+        file text_file : text open read_mode is "../../SRC/projects/sdram_test/firmware.hex";
+        --file text_file : text open read_mode is "../../../../f32c/src/boot/sio/loader.hex";
         variable text_line : line;
         variable rom_content : rom_type;
         variable temp : std_logic_vector(31 downto 0);
