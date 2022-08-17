@@ -20,7 +20,63 @@ architecture structural of top_vhdl is
 	constant IO_UART_DATA_STATUS_ADDR : std_logic_vector(10 downto 0) := "01100000000";			-- 0x300 (1st Byte = DATA | 2nd Byte = STATUS)
 	constant IO_UART_BAUD_ADDR : std_logic_vector(10 downto 0) := "01100000010";			-- 0x302
 
-    signal bus_valid, bus_instr, bus_ready : std_logic;
+    component sdrc_top
+	port(
+			sdram_clk: in std_logic; --SDRAM Clock 
+			sdram_resetn: in std_logic; --Reset Signal
+			cfg_sdr_width: in std_logic_vector(1 downto 0); -- 2'b00 - 32 Bit SDR, 2'b01 - 16 Bit SDR, 2'b1x - 8 Bit
+			cfg_colbits: in std_logic_vector(1 downto 0); -- 2'b00 - 8 Bit column address, 
+														 -- 2'b01 - 9 Bit, 10 - 10 bit, 11 - 11Bits
+
+			--------------------------------------
+			--Wish Bone Interface
+			-------------------------------------      
+			wb_rst_i: in std_logic;
+			wb_clk_i: in std_logic;
+
+			wb_stb_i: in std_logic;
+			wb_ack_o: out std_logic;
+			wb_addr_i: in std_logic_vector(25 downto 0);
+			wb_we_i: in std_logic; -- 1 - Write, 0 - Read
+			wb_dat_i: in std_logic_vector(31 downto 0);
+			wb_sel_i: in std_logic_vector(3 downto 0); -- Byte enable
+			wb_dat_o: out std_logic_vector(31 downto 0);
+			wb_cyc_i: in std_logic;
+			wb_cti_i: in std_logic_vector(2 downto 0);
+
+			------------------------------------------------
+			-- Interface to SDRAMs
+			------------------------------------------------
+			sdr_cke: out std_logic; -- SDRAM CKE
+			sdr_cs_n: out std_logic;            -- SDRAM Chip Select
+			sdr_ras_n: out std_logic; -- SDRAM ras
+			sdr_cas_n: out std_logic; -- SDRAM cas
+			sdr_we_n: out std_logic; -- SDRAM write enable
+			sdr_dqm: out std_logic_vector(1 downto 0); -- SDRAM Data Mask
+			sdr_ba: out std_logic_vector(1 downto 0); -- SDRAM Bank Enable
+			sdr_addr: out std_logic_vector(12 downto 0); -- SDRAM Address
+			sdr_dq: inout std_logic_vector(15 downto 0); -- SDRA Data Input/output
+
+			------------------------------------------------
+			-- Configuration Parameter
+			------------------------------------------------
+			sdr_init_done: out std_logic; -- Indicate SDRAM Initialisation Done
+			cfg_sdr_tras_d: in std_logic_vector(3 downto 0); -- Active to precharge delay
+			cfg_sdr_trp_d: in std_logic_vector(3 downto 0); -- Precharge to active delay
+			cfg_sdr_trcd_d: in std_logic_vector(3 downto 0); -- Active to R/W delay
+			cfg_sdr_en: in std_logic; -- Enable SDRAM controller
+			cfg_req_depth: in std_logic_vector(1 downto 0); --Maximum Request accepted by SDRAM controller
+			cfg_sdr_mode_reg: in std_logic_vector(12 downto 0);
+			cfg_sdr_cas: in std_logic_vector(2 downto 0); -- SDRAM CAS Latency
+			cfg_sdr_trcar_d: in std_logic_vector(3 downto 0); -- Auto-refresh period
+			cfg_sdr_twr_d: in std_logic_vector(3 downto 0); -- Write recovery delay
+			cfg_sdr_rfsh: in std_logic_vector(11 downto 0);
+			cfg_sdr_rfmax: in std_logic_vector(2 downto 0)
+
+	);
+	end component;
+
+    signal bus_valid, bus_instr, bus_ready, bus_write : std_logic;
     signal bus_addr, bus_wdata, bus_rdata : std_logic_vector(31 downto 0);
     signal bus_wstrb : std_logic_vector(3 downto 0);
     
@@ -45,14 +101,15 @@ architecture structural of top_vhdl is
     signal ram_bus_ready, ram_cs : std_logic;
     
     signal sdram_bus_rdata : std_logic_vector(31 downto 0);
-    signal sdram_bus_ready, sdram_valid, sdram_cs_read, sdram_cs_write, sdram_cs, sdram_ack : std_logic;
+    signal sdram_bus_ready, sdram_init_done, sdram_valid, sdram_cs_read, sdram_cs_write, sdram_cs, sdram_ack : std_logic;
     
     signal gpio_i, gpio_o : std_logic_vector(31 downto 0);
     
     signal we : std_logic;
     
-    signal sdram_a : unsigned(12 downto 0);
-    signal sdram_ba : unsigned(1 downto 0);
+    signal sdram_au : unsigned(12 downto 0);
+    signal sdram_a : std_logic_vector(12 downto 0);
+    signal sdram_ba : std_logic_vector(1 downto 0);
     signal sdram_dq : std_logic_vector(15 downto 0);
     signal sdram_cke : std_logic;
     signal sdram_cs_n : std_logic;
@@ -193,33 +250,54 @@ begin
                     cs => gpio_cs,
                     clk => clk,
                     resetn => resetn);
+                  
+    bus_write <= '1' when bus_wstrb /= "0000" else '0'; 
+    sdram_controller: sdrc_top
+				      port map(sdram_clk => clk,
+								sdram_resetn => resetn,
+								cfg_sdr_width => "11",
+								cfg_colbits => "01",
+								
+								wb_rst_i => reset,
+								wb_clk_i => clk,
+								wb_stb_i => sdram_cs,
+								wb_ack_o => sdram_ack,
+								wb_addr_i => bus_addr(25 downto 0),
+								wb_we_i => bus_write,
+								wb_dat_i => bus_wdata,
+								wb_sel_i => bus_wstrb,
+								wb_dat_o => sdram_bus_rdata,
+								wb_cyc_i => '1',
+								wb_cti_i => "000",
+								
+								sdr_cke => sdram_cke,
+								sdr_cs_n => sdram_cs_n,
+								sdr_ras_n => sdram_ras_n,
+								sdr_cas_n => sdram_cas_n,
+								sdr_we_n => sdram_we_n,
+								sdr_dqm => sdram_dqm,
+								sdr_ba => sdram_ba,
+								sdr_addr => sdram_a,
+								sdr_dq => sdram_dq,
+								
+								sdr_init_done => sdram_init_done,
+								cfg_sdr_tras_d => "1000",
+								cfg_sdr_trp_d => "1000",
+								cfg_sdr_trcd_d => "1000",
+								cfg_sdr_en => '1', 
+								cfg_req_depth => "00",
+								cfg_sdr_mode_reg => "0000000000000",
+								cfg_sdr_cas => "100",
+								cfg_sdr_trcar_d => "1000",
+								cfg_sdr_twr_d => "1000",
+								cfg_sdr_rfsh => "000000100000",
+								cfg_sdr_rfmax => "100" 
+								);
                     
-    sdram_controller : entity work.sdram(arch)
-                       generic map(CLK_FREQ => 50.0)
-                       port map(reset => reset,
-                                clk => clk,
-                                addr => unsigned(bus_addr(22 downto 0)),
-                                data => bus_wdata,
-                                we => sdram_we,
-                                req => sdram_cs,
-                                ack => sdram_ack,
-                                valid => sdram_valid,
-                                q => sdram_bus_rdata,
-                                
-                                sdram_a => sdram_a,
-                                sdram_ba => sdram_ba,
-                                sdram_dq => sdram_dq,
-                                sdram_cke => sdram_cke,
-                                sdram_cs_n => sdram_cs_n,
-                                sdram_ras_n => sdram_ras_n,
-                                sdram_cas_n => sdram_cas_n,
-                                sdram_we_n => sdram_we_n,
-                                sdram_dqml => sdram_dqml,
-                                sdram_dqmh => sdram_dqmh);
-           
+    sdram_au <= unsigned(sdram_a);
     mt48lc16m16a2_dev : mt48lc16m16a2
                         port map(Dq => sdram_dq,
-                                 Addr => sdram_a(12 downto 0),
+                                 Addr => sdram_au,
                                  Ba => std_logic_vector(sdram_ba),
                                  Clk => clk,
                                  Cke => sdram_cke,
