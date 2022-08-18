@@ -6,7 +6,7 @@ volatile unsigned int* uart_div_reg = (unsigned int*) 0x30000000;
 volatile unsigned int* uart_wdata_reg = (unsigned int*) 0x30000004;
 volatile unsigned int* uart_rdata_reg = (unsigned int*) 0x30000008;
 
-volatile unsigned int* sdram = (unsigned int*) 0x80000000;
+volatile unsigned char* sdram = (unsigned char*) 0x80000000;
 volatile unsigned int* gpio_o = (unsigned int*) 0x10000000;
 volatile unsigned int* gpio_i = (unsigned int*) 0x10000004;
 
@@ -51,7 +51,7 @@ void sdram_init()
 	//uart_puts(str1);
 	for (int i = 0; i < SDRAM_SIZE; i++)
 	{
-		*(sdram + i) = 0xFFFF0000 + i;
+		*(sdram + i) = (unsigned char) i;
 	}
 	//uart_puts(str2);
 }
@@ -65,10 +65,10 @@ void sdram_check()
 	
 	expected[8] = '\0';
 	got[8] = '\0';
-	unsigned int currVal = 0xFFFF0000;
 	for (int i = 0; i < SDRAM_SIZE; i++)
 	{
-		unsigned int sdramReadVal = *(sdram + i);
+		unsigned char sdramReadVal = *(sdram + i);
+		unsigned char currVal = (unsigned char) i;
 		
 		//format_hex(currVal, expected);
 		//format_hex(sdramReadVal, got);
@@ -107,11 +107,6 @@ int main()
 	*/
 	
 	//*uart_wdata_reg = 0xFFFFFFFF;
-	
-	for (int i = 0; i < 10; i++)
-	{
-		*(sdram + i) = 0xF0F0F0F0 + i;
-	}
 	
 	int i = 0;
 	while(i < 1)

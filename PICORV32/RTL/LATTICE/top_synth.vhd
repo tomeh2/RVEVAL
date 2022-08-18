@@ -246,39 +246,11 @@ begin
 	clk => clk,
 	resetn => resetn
     );
-				/*   
-    sdram_controller: entity work.sdram(arch)
-    generic map (
-	CLK_FREQ => 50.0
-    )
-    port map(
-	reset => reset,
-	clk => clk,
-	addr => unsigned(bus_addr(22 downto 0)),
-	data => bus_wdata,
-	we => bus_write,
-	req => sdram_cs,
-	ack => sdram_ack,
-	valid => sdram_valid,
-	q => sdram_bus_rdata,
 
-	sdram_a => sdram_a,
-	sdram_ba => sdram_ba,
-	sdram_dq => sdram_d,
-	sdram_cke => sdram_cke,
-	sdram_cs_n => sdram_csn,
-	sdram_ras_n => sdram_rasn,
-	sdram_cas_n => sdram_casn,
-	sdram_we_n => sdram_wen,
-	sdram_dqml => sdram_dqm(0),
-	sdram_dqmh => sdram_dqm(1)
-    );
-*/
-	
-	sdram_controller: sdrc_top
+    sdram_controller: sdrc_top
 				      port map(sdram_clk => clk,
 								sdram_resetn => resetn,
-								cfg_sdr_width => "11",
+								cfg_sdr_width => "01",
 								cfg_colbits => "01",
 								
 								wb_rst_i => reset,
@@ -309,11 +281,11 @@ begin
 								cfg_sdr_trcd_d => "1000",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
-								cfg_sdr_mode_reg => "0000000000000",
-								cfg_sdr_cas => "100",
+								cfg_sdr_mode_reg => "0000000100001",
+								cfg_sdr_cas => "011",
 								cfg_sdr_trcar_d => "1000",
-								cfg_sdr_twr_d => "1000",
-								cfg_sdr_rfsh => "000000100000",
+								cfg_sdr_twr_d => "1111",
+								cfg_sdr_rfsh => "000010000000",
 								cfg_sdr_rfmax => "100" 
 								);
 
@@ -375,63 +347,64 @@ begin
     bus_ready <= rom_bus_ready or sdram_bus_ready or ram_bus_ready
       or mmio_bus_ready or unmapped_bus_ready;
 	
-    sdram_cs_proc: process(clk)
+sdram_cs_proc : process(clk)
     begin
-	if rising_edge(clk) then
-	    if reset = '1' then
-		sdram_bus_access_state <= "00";
-	    else
-		if sdram_bus_access_state = "00" then
-		    if bus_addr(31 downto 28) = SDRAM_ADDR_TOP
-		      and bus_valid = '1' then
-			sdram_bus_access_state <= "01";
-		    else
-			sdram_bus_access_state <= "00";
-		    end if;
-		elsif sdram_bus_access_state = "01" then
-		    if sdram_ack = '1' and bus_wstrb = "0000" then
-			sdram_bus_access_state <= "10";
-		    elsif sdram_ack = '1' and bus_wstrb /= "0000" then
-			sdram_bus_access_state <= "00";
-		    else
-			sdram_bus_access_state <= "01";
-		    end if;
-		else
-		    if sdram_valid = '1' then
-			sdram_bus_access_state <= "00";
-		    else
-			sdram_bus_access_state <= "10";
-		    end if;
-		end if;
-	    end if;
-	end if;
+        if (rising_edge(clk)) then
+            if (reset = '1') then
+                sdram_bus_access_state <= "00";
+            else
+                if (sdram_bus_access_state = "00") then
+                    if (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb = "0000") then
+                        sdram_bus_access_state <= "11";
+                    elsif (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb /= "0000") then
+                        sdram_bus_access_state <= "01";
+                    else
+                        sdram_bus_access_state <= "00";
+                    end if;
+                elsif (sdram_bus_access_state = "01") then
+                    if (sdram_ack = '1') then
+                        sdram_bus_access_state <= "00";
+                    else
+                        sdram_bus_access_state <= "10";
+                    end if;
+                elsif (sdram_bus_access_state = "10") then
+                    if (sdram_ack = '1') then
+                        sdram_bus_access_state <= "00";
+                    else
+                        sdram_bus_access_state <= "10";
+                    end if;
+                else
+                    if (sdram_ack = '1') then
+                        sdram_bus_access_state <= "00";
+                    else
+                        sdram_bus_access_state <= "11";
+                    end if;
+                end if;
+            end if;
+        end if;
     end process;
     
-    sdram_cs_proc_2: process(sdram_bus_access_state)
+    sdram_cs_proc_2 : process(sdram_bus_access_state)
     begin
-	if sdram_bus_access_state = "00" then
-	    sdram_cs_read <= '0';
-	elsif sdram_bus_access_state = "01" then
-	    sdram_cs_read <= '1';
-	else
-	    sdram_cs_read <= '0';
-	end if;
+        if (sdram_bus_access_state = "00") then
+            sdram_cs_read <= '0';
+        elsif (sdram_bus_access_state = "01" or sdram_bus_access_state = "11") then
+            sdram_cs_read <= '1';
+        else
+            sdram_cs_read <= '0';
+        end if;
     end process;
     
-    sdram_cs_proc_3: process(sdram_bus_access_state, bus_wstrb, sdram_cs_read)
+    sdram_cs_proc_3 : process(sdram_bus_access_state)
     begin
-	if sdram_bus_access_state /= "00" then
-	    if bus_wstrb = "0000" then
-		sdram_cs <= sdram_cs_read;
-	    else 
-		sdram_cs <= '1';
-	    end if;
-	else
-	    sdram_cs <= '0';
-	end if;
+        if (sdram_bus_access_state = "01" or sdram_bus_access_state = "11") then
+            sdram_cs <= '1';
+        else
+            sdram_cs <= '0';
+        end if;
     end process;
 
-    sdram_bus_ready <= sdram_ack when bus_write = '1' else sdram_valid;
+	sdram_bus_ready <= sdram_ack;
 
     -- f32c SIO
     sio_instance: entity work.sio
