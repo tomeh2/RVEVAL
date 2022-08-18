@@ -275,26 +275,26 @@ begin
 								sdr_ras_n => sdram_ras_n,
 								sdr_cas_n => sdram_cas_n,
 								sdr_we_n => sdram_we_n,
-								sdr_dqm => open,
+								sdr_dqm => sdram_dqm,
 								sdr_ba => sdram_ba,
 								sdr_addr => sdram_a,
 								sdr_dq => sdram_dq,
 								
 								sdr_init_done => sdram_init_done,
-								cfg_sdr_tras_d => "1100",
-								cfg_sdr_trp_d => "1100",
-								cfg_sdr_trcd_d => "1100",
+								cfg_sdr_tras_d => "1000",
+								cfg_sdr_trp_d => "1000",
+								cfg_sdr_trcd_d => "1000",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
-								cfg_sdr_mode_reg => "0000000000000",
-								cfg_sdr_cas => "110",
-								cfg_sdr_trcar_d => "1100",
-								cfg_sdr_twr_d => "1100",
+								cfg_sdr_mode_reg => "0000000100001",
+								cfg_sdr_cas => "011",
+								cfg_sdr_trcar_d => "1000",
+								cfg_sdr_twr_d => "1111",
 								cfg_sdr_rfsh => "000010000000",
 								cfg_sdr_rfmax => "100" 
 								);
                     
-    sdram_dqm <= "11";
+    --sdram_dqm <= "00";
                     
     sdram_au <= unsigned(sdram_a);
     mt48lc16m16a2_dev : mt48lc16m16a2
@@ -455,7 +455,7 @@ begin
     
     sdram_cs_proc_3 : process(test_state)
     begin
-        if (test_state = "01") then
+        if (test_state = "01" or test_state = "11") then
             sdram_cs <= '1';
         else
             sdram_cs <= '0';
