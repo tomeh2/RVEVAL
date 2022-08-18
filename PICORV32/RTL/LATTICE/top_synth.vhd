@@ -276,17 +276,17 @@ begin
 								sdr_dq => sdram_d,
 								
 								sdr_init_done => sdram_init_done,
-								cfg_sdr_tras_d => "1000",
-								cfg_sdr_trp_d => "1000",
-								cfg_sdr_trcd_d => "1000",
+								cfg_sdr_tras_d => "0001",
+								cfg_sdr_trp_d => "0001",
+								cfg_sdr_trcd_d => "0001",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
 								cfg_sdr_mode_reg => "0000000100001",
 								cfg_sdr_cas => "011",
-								cfg_sdr_trcar_d => "1000",
-								cfg_sdr_twr_d => "1111",
-								cfg_sdr_rfsh => "000010000000",
-								cfg_sdr_rfmax => "100" 
+								cfg_sdr_trcar_d => "0010",
+								cfg_sdr_twr_d => "0010",
+								cfg_sdr_rfsh => "001000000000",
+								cfg_sdr_rfmax => "010" 
 								);
 
     -- SDRAM clock is also 50 MHz but phase shifted by 90 degrees
