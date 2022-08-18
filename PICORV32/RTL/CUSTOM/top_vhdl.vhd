@@ -352,6 +352,7 @@ begin
 		gpio_cs <= '0';
 		rom_cs <= '0';
 		ram_cs <= '0';
+		sdram_cs <= '0';
 		sdram_cs_write <= '0';
 				
 		uart_reg_div_we <= (others => '0');
@@ -369,6 +370,7 @@ begin
 					ram_cs <= '1';
 				when SDRAM_ADDR_TOP & "0000" =>
 					bus_rdata <= sdram_bus_rdata;
+					sdram_cs <= bus_valid;
 				when X"FF" => 
 					if (bus_addr(31 downto 11) = IO_BASE_ADDR) then
 						if (bus_addr(10 downto 0) = IO_UART_BAUD_ADDR) then
@@ -404,63 +406,7 @@ begin
 			end case;
         end if;
     end process;
-    
-    sdram_cs_proc : process(clk)
-    begin
-        if (rising_edge(clk)) then
-            if (reset = '1') then
-                test_state <= "00";
-            else
-                if (test_state = "00") then
-                    if (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb = "0000") then
-                        test_state <= "11";
-                    elsif (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb /= "0000") then
-                        test_state <= "01";
-                    else
-                        test_state <= "00";
-                    end if;
-                elsif (test_state = "01") then
-                    if (sdram_ack = '1') then
-                        test_state <= "00";
-                    else
-                        test_state <= "10";
-                    end if;
-                elsif (test_state = "10") then
-                    if (sdram_ack = '1') then
-                        test_state <= "00";
-                    else
-                        test_state <= "10";
-                    end if;
-                else
-                    if (sdram_ack = '1') then
-                        test_state <= "00";
-                    else
-                        test_state <= "11";
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
-    
-    sdram_cs_proc_2 : process(test_state)
-    begin
-        if (test_state = "00") then
-            sdram_cs_read <= '0';
-        elsif (test_state = "01" or test_state = "11") then
-            sdram_cs_read <= '1';
-        else
-            sdram_cs_read <= '0';
-        end if;
-    end process;
-    
-    sdram_cs_proc_3 : process(test_state)
-    begin
-        if (test_state = "01" or test_state = "11") then
-            sdram_cs <= '1';
-        else
-            sdram_cs <= '0';
-        end if;
-    end process;
+   
     --sdram_cs <= '1' when bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' else '0';
 
     gpio_i <= X"1111_1111";

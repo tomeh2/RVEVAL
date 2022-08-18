@@ -306,6 +306,7 @@ begin
 	rom_cs <= '0';
 	ram_cs <= '0';
 	sio_cs <= '0';
+	sdram_cs <= '0';
 	simple_out_cs <= '0';
 	mmio_bus_ready <= '0';
 	unmapped_bus_ready <= '0';
@@ -323,6 +324,7 @@ begin
 		end if;
 	    when SDRAM_ADDR_TOP =>
 		bus_rdata <= sdram_bus_rdata;
+		sdram_cs <= bus_valid;
 	    when MMIO_ADDR_TOP =>
 		-- IO devices map to 0xfffff000 to 0xffffffff
 		mmio_bus_ready <= '1';
@@ -346,63 +348,6 @@ begin
 
     bus_ready <= rom_bus_ready or sdram_bus_ready or ram_bus_ready
       or mmio_bus_ready or unmapped_bus_ready;
-	
-sdram_cs_proc : process(clk)
-    begin
-        if (rising_edge(clk)) then
-            if (reset = '1') then
-                sdram_bus_access_state <= "00";
-            else
-                if (sdram_bus_access_state = "00") then
-                    if (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb = "0000") then
-                        sdram_bus_access_state <= "11";
-                    elsif (bus_addr(31 downto 28) = SDRAM_ADDR_TOP and bus_valid = '1' and bus_wstrb /= "0000") then
-                        sdram_bus_access_state <= "01";
-                    else
-                        sdram_bus_access_state <= "00";
-                    end if;
-                elsif (sdram_bus_access_state = "01") then
-                    if (sdram_ack = '1') then
-                        sdram_bus_access_state <= "00";
-                    else
-                        sdram_bus_access_state <= "10";
-                    end if;
-                elsif (sdram_bus_access_state = "10") then
-                    if (sdram_ack = '1') then
-                        sdram_bus_access_state <= "00";
-                    else
-                        sdram_bus_access_state <= "10";
-                    end if;
-                else
-                    if (sdram_ack = '1') then
-                        sdram_bus_access_state <= "00";
-                    else
-                        sdram_bus_access_state <= "11";
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
-    
-    sdram_cs_proc_2 : process(sdram_bus_access_state)
-    begin
-        if (sdram_bus_access_state = "00") then
-            sdram_cs_read <= '0';
-        elsif (sdram_bus_access_state = "01" or sdram_bus_access_state = "11") then
-            sdram_cs_read <= '1';
-        else
-            sdram_cs_read <= '0';
-        end if;
-    end process;
-    
-    sdram_cs_proc_3 : process(sdram_bus_access_state)
-    begin
-        if (sdram_bus_access_state = "01" or sdram_bus_access_state = "11" or sdram_bus_access_state = "10") then
-            sdram_cs <= '1';
-        else
-            sdram_cs <= '0';
-        end if;
-    end process;
 
 	sdram_bus_ready <= sdram_ack;
 
