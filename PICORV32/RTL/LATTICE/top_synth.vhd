@@ -375,8 +375,6 @@ begin
       & btn(3) & btn(5) & btn(4) & btn(6) when rising_edge(clk);
     R_simple_out <= bus_wdata when rising_edge(clk) and bus_write = '1' and
       simple_out_cs = '1';
-    --led <= R_simple_out;
-	led(7 downto 4) <= (others => '0');
-	led(3 downto 0) <= sdram_cs & sdram_ack & sdram_bus_access_state;
+    led <= R_simple_out(7 downto 0);
 
 end structural;
