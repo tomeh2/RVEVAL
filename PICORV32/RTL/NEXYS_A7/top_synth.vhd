@@ -90,6 +90,9 @@ architecture structural of top_synth is
         (-- Clock in ports
         -- Clock out ports
         clk_out1          : out    std_logic;
+        clk_out2          : out    std_logic;
+        clk_out3          : out    std_logic;
+        clk_out4          : out    std_logic;
         -- Status and control signals
         locked             : out     std_logic;
         clk_in1           : in     std_logic
@@ -98,25 +101,26 @@ architecture structural of top_synth is
     
     component picorv32
 		generic(
-			STACKADDR : std_logic_vector(31 downto 0) := X"1000_8000";
+			STACKADDR : std_logic_vector(31 downto 0) := X"8000_4000";
 			PROGADDR_RESET : std_logic_vector(31 downto 0) := X"0000_0000";
-			ENABLE_COUNTERS : boolean := false;
-			ENABLE_COUNTERS64 : boolean := false;
+			ENABLE_COUNTERS : boolean := true;
+			ENABLE_COUNTERS64 : boolean := true;
 			ENABLE_REGS_16_31 : boolean := true;
 			ENABLE_REGS_DUALPORT : boolean := true;
 			LATCHED_MEM_RDATA : boolean := false;
-			TWO_STAGE_SHIFT : boolean := false;
-			BARREL_SHIFTER : boolean := false;
+			TWO_STAGE_SHIFT : boolean := true;
+			BARREL_SHIFTER : boolean := true;
 			TWO_CYCLE_COMPARE : boolean := false;
 			TWO_CYCLE_ALU : boolean := false;
 			COMPRESSED_ISA : boolean := false;
 			CATCH_ILLINSN : boolean := true;
 			ENABLE_PCPI : boolean := false;
-			ENABLE_MUL : boolean := false;
-			ENABLE_FAST_MUL : boolean := false;
+			ENABLE_MUL : boolean := true;
+			ENABLE_DIV : boolean := true;
+			ENABLE_FAST_MUL : boolean := true;
 			ENABLE_IRQ : boolean := false;
-			ENABLE_IRQ_QREGS : boolean := false;
-			ENABLE_IRQ_TIMER : boolean := false;
+			ENABLE_IRQ_QREGS : boolean := true;
+			ENABLE_IRQ_TIMER : boolean := true;
 			ENABLE_TRACE : boolean := false;
 			REGS_INIT_ZERO : boolean := false;
 			MASKED_IRQ : std_logic_vector(31 downto 0) := (others => '0');
@@ -191,7 +195,7 @@ architecture structural of top_synth is
     
     signal irq: std_logic_vector(31 downto 0) := (others => '0');
     
-    signal clk, resetn, reset: std_logic;
+    signal clk, clk_locked, resetn, reset: std_logic;
     
     signal rom_bus_rdata: std_logic_vector(31 downto 0);
     signal rom_bus_ready, rom_cs: std_logic;
@@ -213,9 +217,17 @@ architecture structural of top_synth is
     signal mmio_bus_ready: std_logic;
     signal unmapped_bus_ready: std_logic;
 begin
-    clk <= CLK100MHZ;
+    clk_wiz : clk_wiz_0_clk_wiz
+              port map(clk_in1 => CLK100MHZ,
+                       locked => clk_locked,
+                       clk_out1 => clk,
+                       clk_out2 => open,
+                       clk_out3 => open,
+                       clk_out4 => open);
 
-    resetn <= not CPU_RESETN and not sio_break;
+
+    resetn <= CPU_RESETN and not sio_break and clk_locked;
+    --resetn <= CPU_RESETN;
     reset <= not resetn;
 
     picorv32_inst: picorv32
@@ -270,10 +282,10 @@ begin
     
     sdram_replacement: entity work.ram_memory(rtl)
     generic map (
-	SIZE_BYTES => 262144       -- 256 KB RAM
+	SIZE_BYTES => 524288       -- 512KB RAM
     )
     port map(
-	bus_addr => bus_addr(17 downto 0),
+	bus_addr => bus_addr(18 downto 0),
 	bus_wdata => bus_wdata,
 	bus_rdata => sdram_bus_rdata,
 	bus_wstrb => bus_wstrb,
@@ -308,8 +320,8 @@ begin
 		    ram_cs <= '1';
 		end if;
 	    when SDRAM_ADDR_TOP =>
-		bus_rdata <= sdram_bus_rdata;
-		sdram_cs <= bus_valid;
+            bus_rdata <= sdram_bus_rdata;
+            sdram_cs <= bus_valid;
 	    when MMIO_ADDR_TOP =>
 		-- IO devices map to 0xfffff000 to 0xffffffff
 		mmio_bus_ready <= '1';
@@ -358,6 +370,7 @@ begin
       & BTNL & BTND & '0' & '0' when rising_edge(clk);
     R_simple_out <= bus_wdata when rising_edge(clk) and bus_write = '1' and
       simple_out_cs = '1';
+      
     LED(7 downto 0) <= R_simple_out(7 downto 0);
     LED(15 downto 8) <= (others => '0');
 

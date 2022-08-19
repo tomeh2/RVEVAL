@@ -127,6 +127,6 @@ begin
 	    end if;
 	end if;
     end process;
-
-    data_ready <= R_ack;
+    
+	data_ready <= R_ack;
 end x;
