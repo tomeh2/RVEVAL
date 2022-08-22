@@ -1178,7 +1178,7 @@ begin
 --      irq_rxd_o   => uart0_rxd_irq,              -- uart data received interrupt
 --      irq_txd_o   => uart0_txd_irq               -- uart transmission done interrupt
 --    );
-    resp_bus(RESP_UART0).err <= '0'; -- no access error possible
+    --resp_bus(RESP_UART0).err <= '0'; -- no access error possible
         sio_instance: entity work.sio(Behavioral)
         generic map (
         C_clk_freq => 100,
@@ -1189,18 +1189,18 @@ begin
             ce => sio_cs,
             txd => txd,
             rxd => rxd,
-            bus_write => io_wren,
+            bus_write => p_bus.we,
             byte_sel => sio_byte_sel,
             bus_in => std_logic_vector(p_bus.wdata),
             bus_out => sio_bus_rdata,
             break => open
         );
-        sio_byte_sel <= std_logic_vector(cpu_d.ben) when std_logic_vector(cpu_d.ben) /= x"0" else x"f";
-        sio_cs <= '1' when p_bus.addr(31 downto 8) = X"fffffb" else '0';
+        sio_byte_sel <= std_logic_vector(p_bus.ben) when std_logic_vector(p_bus.ben) /= x"0" else x"f";
+        sio_cs <= '1' when p_bus.addr(31 downto 8) = X"fffffb" and (p_bus.we = '1' or p_bus.re = '1') else '0';
         resp_bus(RESP_UART0).rdata <= std_ulogic_vector(sio_bus_rdata) when sio_cs = '1' else (others => '0');
         resp_bus(RESP_UART0).ack <= sio_cs or led_cs;
         
-        led_cs <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" else '0';
+        led_cs <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" and (p_bus.we = '1' or p_bus.re = '1') else '0';
         led_out <= std_logic_vector(p_bus.wdata(15 downto 0)) when (rising_edge(clk_i) and led_cs = '1');
   end generate;
   

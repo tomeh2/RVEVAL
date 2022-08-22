@@ -84,11 +84,11 @@ architecture Behavioral of sio is
 
     -- baud * 16 impulse generator
     signal R_baudrate: std_logic_vector(15 downto 0) := C_baud_init;
-    signal R_baudgen: std_logic_vector(16 downto 0);
+    signal R_baudgen: std_logic_vector(16 downto 0) := (others => '0');
 
     -- transmit logic
-    signal tx_tickcnt: std_logic_vector(3 downto 0);
-    signal tx_phase: std_logic_vector(3 downto 0);
+    signal tx_tickcnt: std_logic_vector(3 downto 0) := "0000";
+    signal tx_phase: std_logic_vector(3 downto 0) := "0000";
     signal tx_running: std_logic;
     signal tx_ser: std_logic_vector(8 downto 0) := (others => '1');
 
@@ -97,7 +97,7 @@ architecture Behavioral of sio is
     signal rx_tickcnt: std_logic_vector(3 downto 0);
     signal rx_des: std_logic_vector(7 downto 0);
     signal rx_phase: std_logic_vector(3 downto 0);
-    signal rx_byte: std_logic_vector(7 downto 0);
+    signal rx_byte: std_logic_vector(7 downto 0) := X"00";
     signal rx_full: std_logic;
     signal rx_break_tickcnt: std_logic_vector(C_break_detect_bits-1 downto 0) := C_break_detect_start;
 begin
