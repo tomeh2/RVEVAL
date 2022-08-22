@@ -56,7 +56,7 @@ entity neorv32_test_setup_bootloader is
     
     CPU_RESETN      : in  std_ulogic; -- global reset, low-active, async
     -- GPIO --
-    LED : out std_ulogic_vector(15 downto 0);
+    LED : out std_logic_vector(15 downto 0);
     
     --gpio_o      : out std_ulogic_vector(7 downto 0); -- parallel output
     -- UART0 --
@@ -95,11 +95,14 @@ begin
     
     rstn_i <= '0', '1' after 30ns;
 
+--    rstn_i <= CPU_RESETN;
+--    clk_i <= CLK100MHZ;
+
   --clk_i <= CLK100MHZ;
   --rstn_i <= CPU_RESETN; 
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  neorv32_top_inst: neorv32_top
+  neorv32_top_inst: entity neorv32.neorv32_top
   generic map (
     -- General --
     CLOCK_FREQUENCY              => CLOCK_FREQUENCY,   -- clock frequency of clk_i in Hz
@@ -129,8 +132,8 @@ begin
     -- GPIO (available if IO_GPIO_EN = true) --
     gpio_o      => con_gpio_o,  -- parallel output
     -- primary UART0 (available if IO_UART0_EN = true) --
-    uart0_txd_o => UART_RXD_OUT, -- UART0 send data
-    uart0_rxd_i => UART_TXD_IN,  -- UART0 receive data
+    --uart0_txd_o => UART_RXD_OUT, -- UART0 send data
+    --uart0_rxd_i => UART_TXD_IN,  -- UART0 receive data
     
     wb_tag_o => wb_tag, -- request tag
     wb_adr_o => wb_addr,  -- address
@@ -141,7 +144,10 @@ begin
     wb_stb_o => wb_stb, -- strobe
     wb_cyc_o => wb_cyc,  -- valid cycle
     wb_ack_i => wb_ack,  -- transfer acknowledge
-    wb_err_i => wb_err  -- transfer error
+    
+    led_out => LED,
+    rxd => UART_TXD_IN,
+    txd => UART_RXD_OUT
   );
   
     rom : entity work.rom
@@ -158,7 +164,6 @@ begin
     wb_dat_i <= std_ulogic_vector(rom_data_o);
 
   -- GPIO output --
-  --gpio_o <= con_gpio_o(7 downto 0);
-    LED <= con_gpio_o(15 downto 0);
+  --LED(15 downto 0) <= std_logic_vector(con_gpio_o(15 downto 0));
 
 end architecture;

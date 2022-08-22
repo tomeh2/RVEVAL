@@ -1020,6 +1020,7 @@ package neorv32_package is
       IO_XIP_EN                    : boolean := false   -- implement execute in place module (XIP)?
     );
     port (
+
       -- Global control --
       clk_i          : in  std_ulogic; -- global clock, rising edge
       rstn_i         : in  std_ulogic; -- global reset, low-active, async

@@ -231,7 +231,11 @@ entity neorv32_top is
     -- CPU interrupts --
     mtime_irq_i    : in  std_ulogic := 'L'; -- machine timer interrupt, available if IO_MTIME_EN = false
     msw_irq_i      : in  std_ulogic := 'L'; -- machine software interrupt
-    mext_irq_i     : in  std_ulogic := 'L'  -- machine external interrupt
+    mext_irq_i     : in  std_ulogic := 'L';  -- machine external interrupt
+    
+    txd : out std_logic;
+    rxd : in std_logic;
+    led_out : out std_logic_vector(15 downto 0)
   );
 end neorv32_top;
 
@@ -382,7 +386,8 @@ architecture neorv32_top_rtl of neorv32_top is
   signal sio_cs, sio_break: std_logic;
   signal sio_bus_rdata: std_logic_vector(31 downto 0);
   signal sio_byte_sel: std_logic_vector(3 downto 0);
-
+  
+  signal led_cs : std_logic;
 begin
 
   -- Processor IO/Peripherals Configuration -------------------------------------------------
@@ -1173,7 +1178,7 @@ begin
 --      irq_rxd_o   => uart0_rxd_irq,              -- uart data received interrupt
 --      irq_txd_o   => uart0_txd_irq               -- uart transmission done interrupt
 --    );
---    resp_bus(RESP_UART0).err <= '0'; -- no access error possible
+    resp_bus(RESP_UART0).err <= '0'; -- no access error possible
         sio_instance: entity work.sio(Behavioral)
         generic map (
         C_clk_freq => 100,
@@ -1182,8 +1187,8 @@ begin
         port map (
             clk => clk_i,
             ce => sio_cs,
-            txd => open,
-            rxd => 'U',
+            txd => txd,
+            rxd => rxd,
             bus_write => io_wren,
             byte_sel => sio_byte_sel,
             bus_in => std_logic_vector(p_bus.wdata),
@@ -1193,9 +1198,12 @@ begin
         sio_byte_sel <= std_logic_vector(cpu_d.ben) when std_logic_vector(cpu_d.ben) /= x"0" else x"f";
         sio_cs <= '1' when p_bus.addr(31 downto 8) = X"fffffb" else '0';
         resp_bus(RESP_UART0).rdata <= std_ulogic_vector(sio_bus_rdata) when sio_cs = '1' else (others => '0');
-        resp_bus(RESP_UART0).ack <= sio_cs;
+        resp_bus(RESP_UART0).ack <= sio_cs or led_cs;
         
+        led_cs <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" else '0';
+        led_out <= std_logic_vector(p_bus.wdata(15 downto 0)) when (rising_edge(clk_i) and led_cs = '1');
   end generate;
+  
 
   neorv32_uart0_inst_false:
   if (IO_UART0_EN = false) generate
@@ -1206,6 +1214,7 @@ begin
     uart0_cg_en   <= '0';
     uart0_rxd_irq <= '0';
     uart0_txd_irq <= '0';
+
   end generate;
 
 
@@ -1655,14 +1664,14 @@ begin
 
   neorv32_debug_dm_false:
   if (ON_CHIP_DEBUGGER_EN = false) generate
---    dmi.req_ready  <= '0';
---    dmi.resp_valid <= '0';
---    dmi.resp_data  <= (others => '0');
---    dmi.resp_err   <= '0';
---    --
---    resp_bus(RESP_OCD) <= resp_bus_entry_terminate_c;
---    dci_ndmrstn  <= '1';
---    dci_halt_req <= '0';
+    dmi.req_ready  <= '0';
+    dmi.resp_valid <= '0';
+    dmi.resp_data  <= (others => '0');
+    dmi.resp_err   <= '0';
+    --
+    resp_bus(RESP_OCD) <= resp_bus_entry_terminate_c;
+    dci_ndmrstn  <= '1';
+    dci_halt_req <= '0';
   end generate;
 
 
