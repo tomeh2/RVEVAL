@@ -32,12 +32,16 @@
 -- # The NEORV32 RISC-V Processor - https://github.com/stnolting/neorv32                           #
 -- #################################################################################################
 
+-- UNCOMMENT NEO_CPU_CONTROL LINES 1903
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library neorv32;
 use neorv32.neorv32_package.all;
+
+use work.f32c_pack.all;
 
 entity neorv32_test_setup_bootloader is
   generic (
@@ -66,31 +70,57 @@ architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader 
   signal con_gpio_o : std_ulogic_vector(63 downto 0);
 
   signal clk_i, rstn_i : std_logic;
+  
+  signal wb_tag : std_ulogic_vector(02 downto 0); -- request tag
+  signal wb_addr : std_ulogic_vector(31 downto 0); -- address
+  signal wb_dat_i : std_ulogic_vector(31 downto 0) := (others => 'U'); -- read data
+  signal wb_dat_o : std_ulogic_vector(31 downto 0); -- write data
+  signal wb_we  : std_ulogic; -- read/write
+  signal wb_sel : std_ulogic_vector(03 downto 0); -- byte enable
+  signal wb_stb : std_ulogic; -- strobe
+  signal wb_cyc : std_ulogic; -- valid cycle
+  signal wb_ack : std_ulogic := 'L'; -- transfer acknowledge
+  signal wb_err : std_ulogic := 'L'; -- transfer error
+  
+  signal rom_addr : std_logic_vector(29 downto 0);
+  signal rom_data_o : std_logic_vector(31 downto 0);
 begin
-  clk_i <= CLK100MHZ;
-  rstn_i <= CPU_RESETN; 
+    process
+    begin
+        clk_i <= '0';
+        wait for 10ns;
+        clk_i <= '1';
+        wait for 10ns;
+    end process;
+    
+    rstn_i <= '0', '1' after 30ns;
+
+  --clk_i <= CLK100MHZ;
+  --rstn_i <= CPU_RESETN; 
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   neorv32_top_inst: neorv32_top
   generic map (
     -- General --
     CLOCK_FREQUENCY              => CLOCK_FREQUENCY,   -- clock frequency of clk_i in Hz
-    INT_BOOTLOADER_EN            => true,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
+    INT_BOOTLOADER_EN            => false,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_C        => true,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
+    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
     CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN              => true,              -- implement processor-internal instruction memory
-    MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
+    MEM_INT_IMEM_EN              => false,              -- implement processor-internal instruction memory
+    --MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
     -- Internal Data memory --
-    MEM_INT_DMEM_EN              => true,              -- implement processor-internal data memory
-    MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
+    MEM_INT_DMEM_EN              => false,              -- implement processor-internal data memory
+    --MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
     -- Processor peripherals --
-    IO_GPIO_EN                   => true,              -- implement general purpose input/output port unit (GPIO)?
-    IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
-    IO_UART0_EN                  => true               -- implement primary universal asynchronous receiver/transmitter (UART0)?
+    IO_GPIO_EN                   => false,              -- implement general purpose input/output port unit (GPIO)?
+    IO_MTIME_EN                  => false,              -- implement machine system timer (MTIME)?
+    IO_UART0_EN                  => false,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
+    
+    MEM_EXT_EN                   => true
   )
   port map (
     -- Global control --
@@ -100,9 +130,32 @@ begin
     gpio_o      => con_gpio_o,  -- parallel output
     -- primary UART0 (available if IO_UART0_EN = true) --
     uart0_txd_o => UART_RXD_OUT, -- UART0 send data
-    uart0_rxd_i => UART_TXD_IN  -- UART0 receive data
+    uart0_rxd_i => UART_TXD_IN,  -- UART0 receive data
+    
+    wb_tag_o => wb_tag, -- request tag
+    wb_adr_o => wb_addr,  -- address
+    wb_dat_i => wb_dat_i, -- read data
+    wb_dat_o => wb_dat_o,  -- write data
+    wb_we_o => wb_we,   -- read/write
+    wb_sel_o => wb_sel,  -- byte enable
+    wb_stb_o => wb_stb, -- strobe
+    wb_cyc_o => wb_cyc,  -- valid cycle
+    wb_ack_i => wb_ack,  -- transfer acknowledge
+    wb_err_i => wb_err  -- transfer error
   );
+  
+    rom : entity work.rom
+          generic map(C_arch => ARCH_RV32,
+                      C_big_endian => false,
+	                  C_boot_spi => false)
+          port map(clk => clk_i,
+                   strobe => wb_stb,
+                   addr => rom_addr,
+                   data_ready => wb_ack,
+                   data_out => rom_data_o);
 
+    rom_addr <= std_logic_vector(wb_addr(31 downto 2));
+    wb_dat_i <= std_ulogic_vector(rom_data_o);
 
   -- GPIO output --
   --gpio_o <= con_gpio_o(7 downto 0);
