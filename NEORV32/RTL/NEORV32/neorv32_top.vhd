@@ -379,6 +379,10 @@ architecture neorv32_top_rtl of neorv32_top is
   signal xip_enable  : std_ulogic;
   signal xip_page    : std_ulogic_vector(3 downto 0);
 
+  signal sio_cs, sio_break: std_logic;
+  signal sio_bus_rdata: std_logic_vector(31 downto 0);
+  signal sio_byte_sel: std_logic_vector(3 downto 0);
+
 begin
 
   -- Processor IO/Peripherals Configuration -------------------------------------------------
@@ -1140,36 +1144,57 @@ begin
   -- -------------------------------------------------------------------------------------------
   neorv32_uart0_inst_true:
   if (IO_UART0_EN = true) generate
-    neorv32_uart0_inst: neorv32_uart
-    generic map (
-      UART_PRIMARY => true,             -- true = primary UART (UART0), false = secondary UART (UART1)
-      UART_RX_FIFO => IO_UART0_RX_FIFO, -- RX fifo depth, has to be a power of two, min 1
-      UART_TX_FIFO => IO_UART0_TX_FIFO  -- TX fifo depth, has to be a power of two, min 1
-    )
-    port map (
-      -- host access --
-      clk_i       => clk_i,                      -- global clock line
-      rstn_i      => rstn_int,                   -- global reset line, low-active
-      addr_i      => p_bus.addr,                 -- address
-      rden_i      => io_rden,                    -- read enable
-      wren_i      => io_wren,                    -- write enable
-      data_i      => p_bus.wdata,                -- data in
-      data_o      => resp_bus(RESP_UART0).rdata, -- data out
-      ack_o       => resp_bus(RESP_UART0).ack,   -- transfer acknowledge
-      -- clock generator --
-      clkgen_en_o => uart0_cg_en,                -- enable clock generator
-      clkgen_i    => clk_gen,
-      -- com lines --
-      uart_txd_o  => uart0_txd_o,
-      uart_rxd_i  => uart0_rxd_i,
-      -- hardware flow control --
-      uart_rts_o  => uart0_rts_o,                -- UART.RX ready to receive ("RTR"), low-active, optional
-      uart_cts_i  => uart0_cts_i,                -- UART.TX allowed to transmit, low-active, optional
-      -- interrupts --
-      irq_rxd_o   => uart0_rxd_irq,              -- uart data received interrupt
-      irq_txd_o   => uart0_txd_irq               -- uart transmission done interrupt
-    );
-    resp_bus(RESP_UART0).err <= '0'; -- no access error possible
+--    neorv32_uart0_inst: neorv32_uart
+--    generic map (
+--      UART_PRIMARY => true,             -- true = primary UART (UART0), false = secondary UART (UART1)
+--      UART_RX_FIFO => IO_UART0_RX_FIFO, -- RX fifo depth, has to be a power of two, min 1
+--      UART_TX_FIFO => IO_UART0_TX_FIFO  -- TX fifo depth, has to be a power of two, min 1
+--    )
+--    port map (
+--      -- host access --
+--      clk_i       => clk_i,                      -- global clock line
+--      rstn_i      => rstn_int,                   -- global reset line, low-active
+--      addr_i      => p_bus.addr,                 -- address
+--      rden_i      => io_rden,                    -- read enable
+--      wren_i      => io_wren,                    -- write enable
+--      data_i      => p_bus.wdata,                -- data in
+--      data_o      => resp_bus(RESP_UART0).rdata, -- data out
+--      ack_o       => resp_bus(RESP_UART0).ack,   -- transfer acknowledge
+--      -- clock generator --
+--      clkgen_en_o => uart0_cg_en,                -- enable clock generator
+--      clkgen_i    => clk_gen,
+--      -- com lines --
+--      uart_txd_o  => uart0_txd_o,
+--      uart_rxd_i  => uart0_rxd_i,
+--      -- hardware flow control --
+--      uart_rts_o  => uart0_rts_o,                -- UART.RX ready to receive ("RTR"), low-active, optional
+--      uart_cts_i  => uart0_cts_i,                -- UART.TX allowed to transmit, low-active, optional
+--      -- interrupts --
+--      irq_rxd_o   => uart0_rxd_irq,              -- uart data received interrupt
+--      irq_txd_o   => uart0_txd_irq               -- uart transmission done interrupt
+--    );
+--    resp_bus(RESP_UART0).err <= '0'; -- no access error possible
+        sio_instance: entity work.sio(Behavioral)
+        generic map (
+        C_clk_freq => 100,
+        C_break_detect => true
+        )
+        port map (
+            clk => clk_i,
+            ce => sio_cs,
+            txd => open,
+            rxd => 'U',
+            bus_write => io_wren,
+            byte_sel => sio_byte_sel,
+            bus_in => std_logic_vector(p_bus.wdata),
+            bus_out => sio_bus_rdata,
+            break => open
+        );
+        sio_byte_sel <= std_logic_vector(cpu_d.ben) when std_logic_vector(cpu_d.ben) /= x"0" else x"f";
+        sio_cs <= '1' when p_bus.addr(31 downto 8) = X"fffffb" else '0';
+        resp_bus(RESP_UART0).rdata <= std_ulogic_vector(sio_bus_rdata) when sio_cs = '1' else (others => '0');
+        resp_bus(RESP_UART0).ack <= sio_cs;
+        
   end generate;
 
   neorv32_uart0_inst_false:
@@ -1630,14 +1655,14 @@ begin
 
   neorv32_debug_dm_false:
   if (ON_CHIP_DEBUGGER_EN = false) generate
-    dmi.req_ready  <= '0';
-    dmi.resp_valid <= '0';
-    dmi.resp_data  <= (others => '0');
-    dmi.resp_err   <= '0';
-    --
-    resp_bus(RESP_OCD) <= resp_bus_entry_terminate_c;
-    dci_ndmrstn  <= '1';
-    dci_halt_req <= '0';
+--    dmi.req_ready  <= '0';
+--    dmi.resp_valid <= '0';
+--    dmi.resp_data  <= (others => '0');
+--    dmi.resp_err   <= '0';
+--    --
+--    resp_bus(RESP_OCD) <= resp_bus_entry_terminate_c;
+--    dci_ndmrstn  <= '1';
+--    dci_halt_req <= '0';
   end generate;
 
 
