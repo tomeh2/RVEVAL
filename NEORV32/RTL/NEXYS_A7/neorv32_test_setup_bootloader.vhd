@@ -85,18 +85,18 @@ architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader 
   signal rom_addr : std_logic_vector(29 downto 0);
   signal rom_data_o : std_logic_vector(31 downto 0);
 begin
---    process
---    begin
---        clk_i <= '0';
---        wait for 10ns;
---        clk_i <= '1';
---        wait for 10ns;
---    end process;
+    process
+    begin
+        clk_i <= '0';
+        wait for 10ns;
+        clk_i <= '1';
+        wait for 10ns;
+    end process;
     
---    rstn_i <= '0', '1' after 30ns;
+    rstn_i <= '0', '1' after 30ns;
 
-    rstn_i <= CPU_RESETN;
-    clk_i <= CLK100MHZ;
+--    rstn_i <= CPU_RESETN;
+--    clk_i <= CLK100MHZ;
 
   --clk_i <= CLK100MHZ;
   --rstn_i <= CPU_RESETN; 
