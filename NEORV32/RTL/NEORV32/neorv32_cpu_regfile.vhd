@@ -74,7 +74,9 @@ architecture neorv32_cpu_regfile_rtl of neorv32_cpu_regfile is
   -- register file --
   type   reg_file_t is array (31 downto 0) of std_ulogic_vector(data_width_c-1 downto 0);
   type   reg_file_emb_t is array (15 downto 0) of std_ulogic_vector(data_width_c-1 downto 0);
-  signal reg_file     : reg_file_t;
+  signal reg_file     : reg_file_t := (2 => X"8000_1000",
+  
+                                       others => (others => '0'));
   signal reg_file_emb : reg_file_emb_t;
 
   -- access --
