@@ -42,7 +42,7 @@ package neorv32_package is
   -- -------------------------------------------------------------------------------------------
   -- address space --
   constant ispace_base_c : std_ulogic_vector(31 downto 0) := x"00000000"; -- default instruction memory address space base address
-  constant dspace_base_c : std_ulogic_vector(31 downto 0) := x"80000000"; -- default data memory address space base address
+  constant dspace_base_c : std_ulogic_vector(31 downto 0) := x"90000000"; -- default data memory address space base address
 
   -- if register x0 is implemented as actual physical register is has to be set to zero by the CPU hardware --
   constant reset_x0_c : boolean := true; -- has to be 'true' for the default register file rtl description (BRAM-based)

@@ -388,6 +388,10 @@ architecture neorv32_top_rtl of neorv32_top is
   signal sio_byte_sel: std_logic_vector(3 downto 0);
   
   signal led_cs : std_logic;
+  signal led_cs_next : std_logic;
+  signal sio_cs_next : std_logic;
+  
+  signal bus_write_delayed : std_logic;
 begin
 
   -- Processor IO/Peripherals Configuration -------------------------------------------------
@@ -1189,19 +1193,23 @@ begin
             ce => sio_cs,
             txd => txd,
             rxd => rxd,
-            bus_write => p_bus.we,
+            bus_write => bus_write_delayed,
             byte_sel => sio_byte_sel,
             bus_in => std_logic_vector(p_bus.wdata),
             bus_out => sio_bus_rdata,
             break => open
         );
         sio_byte_sel <= std_logic_vector(p_bus.ben) when std_logic_vector(p_bus.ben) /= x"0" else x"f";
-        sio_cs <= '1' when p_bus.addr(31 downto 8) = X"fffffb" and (p_bus.we = '1' or p_bus.re = '1') else '0';
+        sio_cs_next <= '1' when p_bus.addr(31 downto 8) = X"fffffb" and (p_bus.we = '1' or p_bus.re = '1') else '0'; 
+        sio_cs <= sio_cs_next when rising_edge(clk_i);
         resp_bus(RESP_UART0).rdata <= std_ulogic_vector(sio_bus_rdata) when sio_cs = '1' else (others => '0');
         resp_bus(RESP_UART0).ack <= sio_cs or led_cs;
         
-        led_cs <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" and (p_bus.we = '1' or p_bus.re = '1') else '0';
+        led_cs_next <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" and (p_bus.we = '1') else '0'; 
+        led_cs <= led_cs_next when rising_edge(clk_i);
         led_out <= std_logic_vector(p_bus.wdata(15 downto 0)) when (rising_edge(clk_i) and led_cs = '1');
+        
+        bus_write_delayed <= sio_cs_next and p_bus.we when rising_edge(clk_i);
   end generate;
   
 
