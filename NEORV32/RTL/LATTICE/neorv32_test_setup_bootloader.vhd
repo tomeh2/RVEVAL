@@ -253,7 +253,7 @@ begin
                    data_out => rom_rdata);
 
    
-    /*ram_memory : entity neorv32.ram_memory
+    ram_memory : entity neorv32.ram_memory
                  generic map(SIZE_BYTES => 32 * 1024)
                  port map(bus_addr => std_logic_vector(wb_addr(14 downto 0)),
                           bus_wdata => std_logic_vector(wb_dat_o),
@@ -264,8 +264,8 @@ begin
                           wr_en => ram_wr_en,
                           stb => ram_en,
                           clk => clk_i,
-                          resetn => rstn_i);*/
-	
+                          resetn => rstn_i);
+	/*
 	sdram_controller: sdrc_top
 				      port map(sdram_clk => clk_i,
 								sdram_resetn => rstn_i,
@@ -307,7 +307,7 @@ begin
 								cfg_sdr_rfsh => "001000000000",
 								cfg_sdr_rfmax => "010" 
 								);
-
+*//*
     process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we)
     begin
         case wb_addr(31 downto 28) is
@@ -318,6 +318,7 @@ begin
                 ram_stb <= wb_stb;
                 ram_sel <= wb_sel;
                 wb_dat_i <= std_ulogic_vector(ram_rdata);
+				ram_wr_en 
                 rom_stb <= '0';
             when others => 
                 rom_stb <= wb_stb;
@@ -328,7 +329,26 @@ begin
                 ram_sel <= X"0";
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
         end case;
+    end process;*/
+
+	ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 
+
+    process(wb_addr, ram_rdata, rom_rdata, wb_addr, wb_stb)
+    begin
+        case wb_addr(31 downto 28) is
+            when X"8" => 
+                rom_addr <= (others => '0');
+                ram_wr_en <= wb_we;
+                wb_dat_i <= std_ulogic_vector(ram_rdata);
+                rom_stb <= '0';
+            when others => 
+                rom_stb <= wb_stb;
+                rom_addr <= std_logic_vector(wb_addr(31 downto 2));
+                ram_wr_en <= '0';
+                wb_dat_i <= std_ulogic_vector(rom_rdata);
+        end case;
     end process;
+
 
 	led <= led_out(7 downto 0);
 
