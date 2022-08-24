@@ -170,7 +170,7 @@ begin
     MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
     -- Processor peripherals --
     IO_GPIO_EN                   => false,              -- implement general purpose input/output port unit (GPIO)?
-    IO_MTIME_EN                  => false,              -- implement machine system timer (MTIME)?
+    IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
     IO_UART0_EN                  => true,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
     
     MEM_EXT_EN                   => true

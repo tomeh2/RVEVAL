@@ -1185,7 +1185,7 @@ begin
     --resp_bus(RESP_UART0).err <= '0'; -- no access error possible
         sio_instance: entity work.sio(Behavioral)
         generic map (
-        C_clk_freq => 100,
+        C_clk_freq => CLOCK_FREQUENCY / 1000000,
         C_break_detect => true
         )
         port map (

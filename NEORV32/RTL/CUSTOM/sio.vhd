@@ -34,7 +34,7 @@ use ieee.math_real.all; -- to calculate log2 bit size
 
 entity sio is
     generic (
-	C_clk_freq: integer; -- MHz clock frequency
+	C_clk_freq: integer := 50; -- MHz clock frequency
 	C_big_endian: boolean := false;
 	C_init_baudrate: integer := 115200;
 	C_fixed_baudrate: boolean := false;

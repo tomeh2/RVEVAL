@@ -32,6 +32,8 @@
 -- # The NEORV32 RISC-V Processor - https://github.com/stnolting/neorv32                           #
 -- #################################################################################################
 
+-- UNCOMMENT NEO_CPU_CONTROL LINES 1903
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -39,31 +41,34 @@ use ieee.numeric_std.all;
 library neorv32;
 use neorv32.neorv32_package.all;
 
+use neorv32.f32c_pack.all;
+
 entity neorv32_test_setup_bootloader is
   generic (
     -- adapt these for your setup --
     CLOCK_FREQUENCY   : natural := 50000000; -- clock frequency of clk_i in Hz
     MEM_INT_IMEM_SIZE : natural := 16*1024;   -- size of processor-internal instruction memory in bytes
-    MEM_INT_DMEM_SIZE : natural := 8*1024     -- size of processor-internal data memory in bytes
+    MEM_INT_DMEM_SIZE : natural := 128*1024     -- size of processor-internal data memory in bytes
   );
   port (
     -- Global control --
-    clk_25mhz : in std_logic;
+    clk_25mhz: in std_logic;
     
-    btn : in std_logic_vector(6 downto 0);
+    btn: in std_logic_vector(6 downto 0);
     -- GPIO --
-    led : out std_ulogic_vector(7 downto 0);
+    led: out std_logic_vector(7 downto 0);
     
-	sdram_clk : out std_logic;
-	sdram_a : out unsigned(12 downto 0);
-	sdram_ba : out unsigned(1 downto 0);
-	sdram_d : inout std_logic_vector(15 downto 0);
-	sdram_cke : out std_logic;
-	sdram_csn : out std_logic;
-	sdram_rasn : out std_logic;
-	sdram_casn : out std_logic;
-	sdram_wen : out std_logic;
-	sdram_dqm : out std_logic_vector(1 downto 0);
+	sdram_clk: out std_logic;
+	sdram_a: out std_logic_vector(12 downto 0);
+	sdram_ba: out std_logic_vector(1 downto 0);
+	sdram_d: inout std_logic_vector(15 downto 0);
+	sdram_cke: out std_logic;
+	sdram_csn: out std_logic;
+	sdram_rasn: out std_logic;
+	sdram_casn: out std_logic;
+	sdram_wen: out std_logic;
+	sdram_dqm: out std_logic_vector(1 downto 0);
+
 	
     --gpio_o      : out std_ulogic_vector(7 downto 0); -- parallel output
     -- UART0 --
@@ -73,68 +78,144 @@ entity neorv32_test_setup_bootloader is
 end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
-
 	component pll_sdram_1
-		port(CLKI: in std_logic; CLKOP: out std_logic; CLKOS: out std_logic);
+	port(
+		CLKI : in std_logic;
+		CLKOP : out std_logic;
+		CLKOS : out std_logic
+	);
 	end component;
 
-	signal clk_i, clk_sdram : std_logic;
-	signal clk_lock : std_logic;
+	component sdrc_top
+	port(
+			sdram_clk: in std_logic; --SDRAM Clock 
+			sdram_resetn: in std_logic; --Reset Signal
+			cfg_sdr_width: in std_logic_vector(1 downto 0); -- 2'b00 - 32 Bit SDR, 2'b01 - 16 Bit SDR, 2'b1x - 8 Bit
+			cfg_colbits: in std_logic_vector(1 downto 0); -- 2'b00 - 8 Bit column address, 
+														 -- 2'b01 - 9 Bit, 10 - 10 bit, 11 - 11Bits
 
-	signal con_gpio_o : std_ulogic_vector(63 downto 0);
-	signal rstn_i, rst_i : std_logic;
+			--------------------------------------
+			--Wish Bone Interface
+			-------------------------------------      
+			wb_rst_i: in std_logic;
+			wb_clk_i: in std_logic;
 
-	signal wb_tag : std_ulogic_vector(2 downto 0);
-	signal wb_adr : std_ulogic_vector(31 downto 0);
-	signal wb_dat_i : std_ulogic_vector(31 downto 0);
-	signal wb_dat_o : std_ulogic_vector(31 downto 0);
-	signal wb_we_o : std_ulogic;
-	signal wb_sel_o : std_ulogic_vector(3 downto 0);
-	signal wb_stb_o : std_ulogic;
-	signal wb_cyc_o : std_ulogic;
-	signal wb_ack_i : std_ulogic;
-	signal wb_err_i : std_ulogic;	
+			wb_stb_i: in std_logic;
+			wb_ack_o: out std_logic;
+			wb_addr_i: in std_logic_vector(25 downto 0);
+			wb_we_i: in std_logic; -- 1 - Write, 0 - Read
+			wb_dat_i: in std_logic_vector(31 downto 0);
+			wb_sel_i: in std_logic_vector(3 downto 0); -- Byte enable
+			wb_dat_o: out std_logic_vector(31 downto 0);
+			wb_cyc_i: in std_logic;
+			wb_cti_i: in std_logic_vector(2 downto 0);
 
-	signal sdram_cntrlr_addr : unsigned(22 downto 0);
-	signal sdram_cntrlr_we : std_logic;
-	signal sdram_cntrlr_q : std_logic_vector(31 downto 0);
-	signal sdram_cntrlr_req : std_logic;
-	signal sdram_cntrlr_ack : std_logic;
-	signal sdram_cntrlr_valid : std_logic;
-	
-	signal sdram_cs_read, sdram_cs_write : std_logic;
-	signal test_state : std_logic_vector(1 downto 0);
+			------------------------------------------------
+			-- Interface to SDRAMs
+			------------------------------------------------
+			sdr_cke: out std_logic; -- SDRAM CKE
+			sdr_cs_n: out std_logic;            -- SDRAM Chip Select
+			sdr_ras_n: out std_logic; -- SDRAM ras
+			sdr_cas_n: out std_logic; -- SDRAM cas
+			sdr_we_n: out std_logic; -- SDRAM write enable
+			sdr_dqm: out std_logic_vector(1 downto 0); -- SDRAM Data Mask
+			sdr_ba: out std_logic_vector(1 downto 0); -- SDRAM Bank Enable
+			sdr_addr: out std_logic_vector(12 downto 0); -- SDRAM Address
+			sdr_dq: inout std_logic_vector(15 downto 0); -- SDRA Data Input/output
+
+			------------------------------------------------
+			-- Configuration Parameter
+			------------------------------------------------
+			sdr_init_done: out std_logic; -- Indicate SDRAM Initialisation Done
+			cfg_sdr_tras_d: in std_logic_vector(3 downto 0); -- Active to precharge delay
+			cfg_sdr_trp_d: in std_logic_vector(3 downto 0); -- Precharge to active delay
+			cfg_sdr_trcd_d: in std_logic_vector(3 downto 0); -- Active to R/W delay
+			cfg_sdr_en: in std_logic; -- Enable SDRAM controller
+			cfg_req_depth: in std_logic_vector(1 downto 0); --Maximum Request accepted by SDRAM controller
+			cfg_sdr_mode_reg: in std_logic_vector(12 downto 0);
+			cfg_sdr_cas: in std_logic_vector(2 downto 0); -- SDRAM CAS Latency
+			cfg_sdr_trcar_d: in std_logic_vector(3 downto 0); -- Auto-refresh period
+			cfg_sdr_twr_d: in std_logic_vector(3 downto 0); -- Write recovery delay
+			cfg_sdr_rfsh: in std_logic_vector(11 downto 0);
+			cfg_sdr_rfmax: in std_logic_vector(2 downto 0)
+
+	);
+	end component;
+
+  signal con_gpio_o : std_ulogic_vector(63 downto 0);
+
+  signal clk_i, clk_sdram, rstn_i : std_logic;
+  
+  signal wb_tag : std_ulogic_vector(02 downto 0); -- request tag
+  signal wb_addr : std_ulogic_vector(31 downto 0); -- address
+  signal wb_dat_i : std_ulogic_vector(31 downto 0) := (others => 'U'); -- read data
+  signal wb_dat_o : std_ulogic_vector(31 downto 0); -- write data
+  signal wb_we  : std_ulogic; -- read/write
+  signal wb_sel : std_ulogic_vector(03 downto 0); -- byte enable
+  signal wb_stb : std_ulogic; -- strobe
+  signal wb_cyc : std_ulogic; -- valid cycle
+  signal wb_ack : std_ulogic := 'L'; -- transfer acknowledge
+  signal wb_err : std_ulogic := 'L'; -- transfer error
+  
+  signal rom_addr : std_logic_vector(29 downto 0);
+  signal rom_rdata : std_logic_vector(31 downto 0);
+  signal rom_ack : std_logic;
+  signal rom_stb : std_logic;
+  
+  signal ram_wr_en : std_logic;
+  signal ram_rdata : std_logic_vector(31 downto 0);
+  signal ram_sel : std_logic_vector(3 downto 0);
+  signal ram_ack : std_logic;
+  signal ram_we : std_logic;
+  signal ram_stb : std_logic;
+  signal ram_cyc : std_logic;
+  signal ram_en : std_logic;
+  
+  signal led_out : std_logic_vector(15 downto 0);
 begin
+--    process
+--    begin
+--        clk_i <= '0';
+--        wait for 10ns;
+--        clk_i <= '1';
+--        wait for 10ns;
+--    end process;
+    
+--    rstn_i <= '0', '1' after 30ns;
+
+    rstn_i <= btn(0);
+	
+	sdram_clk <= clk_sdram;
+	
+	clk_gen: pll_sdram_1
+		port map(CLKI => clk_25mhz,
+				  CLKOP => clk_sdram,
+				  CLKOS => clk_i);
+
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-	pll_inst : pll_sdram_1
-    port map (CLKI=>clk_25mhz, CLKOP=>clk_sdram, CLKOS=>clk_i);
-  
-  sdram_clk <= clk_sdram;
-  
-  neorv32_top_inst: neorv32_top
+  neorv32_top_inst: entity neorv32.neorv32_top
   generic map (
     -- General --
     CLOCK_FREQUENCY              => CLOCK_FREQUENCY,   -- clock frequency of clk_i in Hz
-    INT_BOOTLOADER_EN            => true,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
+    INT_BOOTLOADER_EN            => false,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
     CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
-    CPU_EXTENSION_RISCV_Zicsr    => false,              -- implement CSR system?
-    CPU_EXTENSION_RISCV_Zicntr   => false,              -- implement base counters?
+    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
+    CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
     -- Internal Instruction memory --
     MEM_INT_IMEM_EN              => false,              -- implement processor-internal instruction memory
     --MEM_INT_IMEM_SIZE            => MEM_INT_IMEM_SIZE, -- size of processor-internal instruction memory in bytes
-	-- External bus
-	MEM_EXT_EN 					  => true,
-	MEM_EXT_TIMEOUT				  => 1023,
     -- Internal Data memory --
-    MEM_INT_DMEM_EN              => true,              -- implement processor-internal data memory
+    MEM_INT_DMEM_EN              => false,              -- implement processor-internal data memory
     MEM_INT_DMEM_SIZE            => MEM_INT_DMEM_SIZE, -- size of processor-internal data memory in bytes
     -- Processor peripherals --
-    IO_GPIO_EN                   => true,              -- implement general purpose input/output port unit (GPIO)?
+    IO_GPIO_EN                   => false,              -- implement general purpose input/output port unit (GPIO)?
     IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
-    IO_UART0_EN                  => true                -- implement primary universal asynchronous receiver/transmitter (UART0)?
+    IO_UART0_EN                  => true,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
+    
+    MEM_EXT_EN                   => true
   )
   port map (
     -- Global control --
@@ -143,118 +224,115 @@ begin
     -- GPIO (available if IO_GPIO_EN = true) --
     gpio_o      => con_gpio_o,  -- parallel output
     -- primary UART0 (available if IO_UART0_EN = true) --
-    uart0_txd_o => ftdi_rxd, -- UART0 send data
-    uart0_rxd_i =>  ftdi_txd, -- UART0 receive data
-	
-	-- Wishbone bus interface --
-    wb_tag_o    => wb_tag,
-    wb_adr_o    => wb_adr,
-    wb_dat_i    => wb_dat_i,
-    wb_dat_o    => wb_dat_o,
-    wb_we_o     => wb_we_o,
-    wb_sel_o    => wb_sel_o,
-    wb_stb_o    => wb_stb_o,
-    wb_cyc_o    => wb_cyc_o,
-    wb_ack_i    => wb_ack_i,
-    wb_err_i    => wb_err_i
+    --uart0_txd_o => UART_RXD_OUT, -- UART0 send data
+    --uart0_rxd_i => UART_TXD_IN,  -- UART0 receive data
+    
+    wb_tag_o => wb_tag, -- request tag
+    wb_adr_o => wb_addr,  -- address
+    wb_dat_i => wb_dat_i, -- read data
+    wb_dat_o => wb_dat_o,  -- write data
+    wb_we_o => wb_we,   -- read/write
+    wb_sel_o => wb_sel,  -- byte enable
+    wb_stb_o => wb_stb, -- strobe
+    wb_cyc_o => wb_cyc,  -- valid cycle
+    wb_ack_i => wb_ack,  -- transfer acknowledge
+    
+    led_out => led_out,
+    rxd => ftdi_txd,
+    txd => ftdi_rxd
   );
   
-	sdram_controller : entity work.sdram(arch)
-                       generic map(CLK_FREQ => 50.0)
-                       port map(reset => rst_i,
-                                clk => clk_i,
-                                addr => sdram_cntrlr_addr,
-                                data => std_logic_vector(wb_dat_o),
-                                we => sdram_cntrlr_we,
-                                req => sdram_cntrlr_req,
-                                ack => sdram_cntrlr_ack,
-                                valid => sdram_cntrlr_valid,
-                                q => sdram_cntrlr_q,
-                                
-                                sdram_a => sdram_a,
-                                sdram_ba => sdram_ba,
-                                sdram_dq => sdram_d,
-                                sdram_cke => sdram_cke,
-                                sdram_cs_n => sdram_csn,
-                                sdram_ras_n => sdram_rasn,
-                                sdram_cas_n => sdram_casn,
-                                sdram_we_n => sdram_wen,
-                                sdram_dqml => sdram_dqm(0),
-                                sdram_dqmh => sdram_dqm(1));
+    rom : entity neorv32.rom
+          generic map(C_arch => ARCH_RV32,
+                      C_big_endian => false,
+	                  C_boot_spi => false)
+          port map(clk => clk_i,
+                   strobe => rom_stb,
+                   addr => rom_addr,
+                   data_ready => rom_ack,
+                   data_out => rom_rdata);
 
-	process(wb_adr, wb_we_o, sdram_cntrlr_q)
-	begin
-		wb_dat_i <= (others => '0');
-		sdram_cntrlr_we <= '0';
-		if (wb_adr(31 downto 28) = X"0") then
-			sdram_cntrlr_we <= wb_we_o;
-			wb_dat_i <= std_ulogic_vector(sdram_cntrlr_q);
-			
-		end if;
-	end process;
+   
+    /*ram_memory : entity neorv32.ram_memory
+                 generic map(SIZE_BYTES => 32 * 1024)
+                 port map(bus_addr => std_logic_vector(wb_addr(14 downto 0)),
+                          bus_wdata => std_logic_vector(wb_dat_o),
+                          bus_rdata => ram_rdata,
+                          bus_wstrb => std_logic_vector(wb_sel),
+                          bus_ready => ram_ack,
+                          
+                          wr_en => ram_wr_en,
+                          stb => ram_en,
+                          clk => clk_i,
+                          resetn => rstn_i);*/
 	
-	sdram_cs_proc : process(clk_i)
-    begin
-        if (rising_edge(clk_i)) then
-            if (rst_i = '1') then
-                test_state <= "00";
-            else
-                if (test_state = "00") then
-                    if (wb_adr(31 downto 28) = X"0" and wb_stb_o = '1') then
-                        test_state <= "01";
-                    else
-                        test_state <= "00";
-                    end if;
-                elsif (test_state = "01") then
-                    if (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '0') then
-                        test_state <= "10";
-                    elsif (sdram_cntrlr_ack = '1' and sdram_cntrlr_we = '1') then
-                        test_state <= "00";
-                    else
-                        test_state <= "01";
-                    end if;
-                else
-                    if (sdram_cntrlr_valid = '1') then
-                        test_state <= "00";
-                    else
-                        test_state <= "10";
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
-	
-	sdram_cs_proc_2 : process(test_state)
-    begin
-        if (test_state = "00") then
-            sdram_cs_read <= '0';
-        elsif (test_state = "01") then
-            sdram_cs_read <= '1';
-        else
-            sdram_cs_read <= '0';
-        end if;
-    end process;
-	
-	sdram_cs_proc_3 : process(test_state, sdram_cntrlr_we, sdram_cs_read)
-    begin
-        if (test_state /= "00") then
-            if (sdram_cntrlr_we = '0') then
-                sdram_cntrlr_req <= sdram_cs_read;
-            else 
-                sdram_cntrlr_req <= '1';
-            end if;
-        else
-            sdram_cntrlr_req <= '0';
-        end if;
-    end process; 
-	
-	sdram_cntrlr_addr <= unsigned(wb_adr(22 downto 0));
-	wb_ack_i <= sdram_cntrlr_ack when sdram_cntrlr_we = '1' else sdram_cntrlr_valid;
-	wb_err_i <= '0';
+	sdram_controller: sdrc_top
+				      port map(sdram_clk => clk_i,
+								sdram_resetn => rstn_i,
+								cfg_sdr_width => "01",
+								cfg_colbits => "01",
+								
+								wb_rst_i => not rstn_i,
+								wb_clk_i => clk_i,
+								wb_stb_i => ram_stb,
+								wb_ack_o => ram_ack,
+								wb_addr_i => wb_addr(25 downto 0),
+								wb_we_i => ram_we,
+								wb_dat_i => wb_dat_o,
+								wb_sel_i => ram_sel,
+								wb_dat_o => ram_rdata,
+								wb_cyc_i => ram_cyc,
+								wb_cti_i => "000",
+								
+								sdr_cke => sdram_cke,
+								sdr_cs_n => sdram_csn,
+								sdr_ras_n => sdram_rasn,
+								sdr_cas_n => sdram_casn,
+								sdr_we_n => sdram_wen,
+								sdr_dqm => sdram_dqm,
+								sdr_ba => sdram_ba,
+								sdr_addr => sdram_a,
+								sdr_dq => sdram_d,
+								
+								sdr_init_done => open,
+								cfg_sdr_tras_d => "0001",
+								cfg_sdr_trp_d => "0001",
+								cfg_sdr_trcd_d => "0001",
+								cfg_sdr_en => '1', 
+								cfg_req_depth => "01",
+								cfg_sdr_mode_reg => "0000000100001",
+								cfg_sdr_cas => "011",
+								cfg_sdr_trcar_d => "0010",
+								cfg_sdr_twr_d => "0010",
+								cfg_sdr_rfsh => "001000000000",
+								cfg_sdr_rfmax => "010" 
+								);
 
-  -- GPIO output --
-	led <= con_gpio_o(7 downto 0);
-	rstn_i <= not btn(6);
-	rst_i <= not rstn_i;
+    process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we)
+    begin
+        case wb_addr(31 downto 28) is
+            when X"8" => 
+                rom_addr <= (others => '0');
+                ram_we <= wb_we;
+                ram_cyc <= wb_cyc;
+                ram_stb <= wb_stb;
+                ram_sel <= wb_sel;
+                wb_dat_i <= std_ulogic_vector(ram_rdata);
+                rom_stb <= '0';
+            when others => 
+                rom_stb <= wb_stb;
+                rom_addr <= std_logic_vector(wb_addr(31 downto 2));
+                ram_we <= '0';
+                ram_cyc <= '0';
+                ram_stb <= '0';
+                ram_sel <= X"0";
+                wb_dat_i <= std_ulogic_vector(rom_rdata);
+        end case;
+    end process;
+
+	led <= led_out(7 downto 0);
+
+    wb_ack <= ram_ack or rom_ack;
+
 
 end architecture;
