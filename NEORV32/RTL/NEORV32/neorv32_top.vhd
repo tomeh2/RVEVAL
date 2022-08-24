@@ -1207,7 +1207,7 @@ begin
         
         led_cs_next <= '1' when p_bus.addr(31 downto 4) = X"ffffff1" and (p_bus.we = '1') else '0'; 
         led_cs <= led_cs_next when rising_edge(clk_i);
-        led_out <= std_logic_vector(p_bus.wdata(15 downto 0)) when (rising_edge(clk_i) and led_cs = '1');
+        led_out <= std_logic_vector(p_bus.wdata(15 downto 0)) when rising_edge(clk_i) and led_cs = '1';
         
         bus_write_delayed <= sio_cs_next and p_bus.we when rising_edge(clk_i);
   end generate;

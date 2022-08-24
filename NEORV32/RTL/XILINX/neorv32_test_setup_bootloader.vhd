@@ -83,6 +83,24 @@ port
  );
 end component;
 
+COMPONENT ila_0
+
+PORT (
+	clk : IN STD_LOGIC;
+
+
+
+	probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0); 
+	probe1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0); 
+	probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0); 
+	probe3 : IN STD_LOGIC_VECTOR(0 DOWNTO 0); 
+	probe4 : IN STD_LOGIC_VECTOR(3 DOWNTO 0); 
+	probe5 : IN STD_LOGIC_VECTOR(0 DOWNTO 0); 
+	probe6 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+	probe7 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
+);
+END COMPONENT  ;
+
   signal con_gpio_o : std_ulogic_vector(63 downto 0);
 
   signal clk_i, rstn_i : std_logic;
@@ -110,29 +128,28 @@ end component;
   signal ram_stb : std_logic;
   signal ram_en : std_logic;
 begin
-    process
-    begin
-        clk_i <= '0';
-        wait for 10ns;
-        clk_i <= '1';
-        wait for 10ns;
-    end process;
+--    process
+--    begin
+--        clk_i <= '0';
+--        wait for 10ns;
+--        clk_i <= '1';
+--        wait for 10ns;
+--    end process;
     
-    rstn_i <= '0', '1' after 30ns;
+--    rstn_i <= '0', '1' after 30ns;
 
-    --rstn_i <= not CPU_RESET;
---    clk_i <= CLK100MHZ;
+    rstn_i <= not CPU_RESET;
 
---   your_instance_name : clk_wiz_0
---   port map ( 
---  -- Clock out ports  
---   clk_out1 => clk_i,
---  -- Status and control signals                
---   locked => open,
---   -- Clock in ports
---   clk_in1_p => SYSCLK_P,
---   clk_in1_n => SYSCLK_N
--- );
+   your_instance_name : clk_wiz_0
+   port map ( 
+  -- Clock out ports  
+   clk_out1 => clk_i,
+  -- Status and control signals                
+   locked => open,
+   -- Clock in ports
+   clk_in1_p => SYSCLK_P,
+   clk_in1_n => SYSCLK_N
+ );
   -- The Core Of The Problem ----------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   neorv32_top_inst: entity neorv32.neorv32_top
@@ -182,10 +199,15 @@ begin
     rxd => USB_UART_TX,
     txd => USB_UART_RX
   );
+    --GPIO_LED_0 <= led(0);
+    --GPIO_LED_1 <= led(1);
+    --GPIO_LED_2 <= led(5);
+    --GPIO_LED_3 <= led(6);
+  
     GPIO_LED_0 <= led(0);
     GPIO_LED_1 <= led(1);
-    GPIO_LED_2 <= led(5);
-    GPIO_LED_3 <= led(6);
+    GPIO_LED_2 <= led(2);
+    GPIO_LED_3 <= led(3);
   
     rom : entity work.rom
           generic map(C_arch => ARCH_RV32,
@@ -211,6 +233,23 @@ begin
                           stb => ram_en,
                           clk => clk_i,
                           resetn => rstn_i);
+
+    ila : ila_0
+PORT MAP (
+	clk => clk_i,
+
+
+
+	probe0 => std_logic_vector(wb_addr), 
+	probe1 => std_logic_vector(wb_dat_i), 
+	probe2 => std_logic_vector(wb_dat_o), 
+	probe3(0) => std_logic(wb_we), 
+	probe4 => std_logic_vector(wb_sel), 
+	probe5(0) => std_logic(wb_stb), 
+	probe6(0) => std_logic(wb_cyc),
+	probe7(0) => std_logic(wb_ack)
+);
+
 
     ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 
 
