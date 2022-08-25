@@ -46,7 +46,7 @@ use neorv32.f32c_pack.all;
 entity neorv32_test_setup_bootloader is
   generic (
     -- adapt these for your setup --
-    CLOCK_FREQUENCY   : natural := 100000000; -- clock frequency of clk_i in Hz
+    CLOCK_FREQUENCY   : natural := 115000000; -- clock frequency of clk_i in Hz
     MEM_INT_IMEM_SIZE : natural := 16*1024;   -- size of processor-internal instruction memory in bytes
     MEM_INT_DMEM_SIZE : natural := 128*1024     -- size of processor-internal data memory in bytes
   );
@@ -221,7 +221,7 @@ begin
 
    
    
-    ram_memory : entity neorv32.ram_memory
+    ram_memory : entity neorv32.ram_memory_no_delay
                  generic map(SIZE_BYTES => 512 * 1024)
                  port map(bus_addr => std_logic_vector(wb_addr(18 downto 0)),
                           bus_wdata => std_logic_vector(wb_dat_o),
@@ -233,22 +233,22 @@ begin
                           stb => ram_en,
                           clk => clk_i,
                           resetn => rstn_i);
+--/
+--    ila : ila_0
+--PORT MAP (
+--	clk => clk_i,
 
-    ila : ila_0
-PORT MAP (
-	clk => clk_i,
 
 
-
-	probe0 => std_logic_vector(wb_addr), 
-	probe1 => std_logic_vector(wb_dat_i), 
-	probe2 => std_logic_vector(wb_dat_o), 
-	probe3(0) => std_logic(wb_we), 
-	probe4 => std_logic_vector(wb_sel), 
-	probe5(0) => std_logic(wb_stb), 
-	probe6(0) => std_logic(wb_cyc),
-	probe7(0) => std_logic(wb_ack)
-);
+--	probe0 => std_logic_vector(wb_addr), 
+--	probe1 => std_logic_vector(wb_dat_i), 
+--	probe2 => std_logic_vector(wb_dat_o), 
+--	probe3(0) => std_logic(wb_we), 
+--	probe4 => std_logic_vector(wb_sel), 
+--	probe5(0) => std_logic(wb_stb), 
+--	probe6(0) => std_logic(wb_cyc),
+--	probe7(0) => std_logic(wb_ack)
+--);
 
 
     ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 

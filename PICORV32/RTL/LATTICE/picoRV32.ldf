@@ -2,7 +2,7 @@
 <BaliProject version="3.2" title="picoRV32" device="LFE5U-45F-6BG381C" default_implementation="impl">
     <Options/>
     <Implementation title="impl" dir="impl" description="impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options def_top="top_synth">
+        <Options def_top="pll_60">
             <Option name="include path" value="../CUSTOM/SDRAM/core"/>
             <Option name="top" value="top_synth"/>
         </Options>
@@ -19,36 +19,6 @@
             <Options/>
         </Source>
         <Source name="pll_sdram_1.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/cpu/defs_f32c.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/cpu/defs_rv32.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/cpu/defs_mi32.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/bootloader/boot_rom_mi32el.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/bootloader/boot_sio_mi32eb.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/bootloader/boot_sio_mi32el.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/bootloader/boot_sio_rv32el.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/bootloader/defs_bootblock.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/generic/rom.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../../f32c/rtl/soc/sio.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../CUSTOM/SDRAM/core/sdrc_bank_ctl.v" type="Verilog" type_short="Verilog">
@@ -84,7 +54,43 @@
         <Source name="../CUSTOM/SDRAM/wb2sdrc/wb2sdrc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="pll2/pll_sdram_2/pll_sdram_2.v" type="Verilog" type_short="Verilog">
+        <Source name="../CUSTOM/boot_rom_mi32el.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_mi32eb.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_mi32el.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_rv32el.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/defs_bootblock.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/defs_f32c.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/defs_mi32.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/defs_rv32.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/sio.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/rom.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="pll/pll_1/pll_1.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="pll/pll_90/pll_90.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="pll/pll_60/pll_60.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../CONSTRAINTS/ulx3s.lpf" type="Logic Preference" type_short="LPF">

@@ -30,7 +30,7 @@ entity top_synth is
 end top_synth;
 
 architecture structural of top_synth is
-    component pll_sdram_1
+    component pll_1
     port (
 	CLKI: in std_logic;
 	CLKOP: out std_logic;
@@ -234,7 +234,7 @@ begin
 					
     ram: entity work.ram_memory(rtl)
     generic map (
-	SIZE_BYTES => 32768
+	SIZE_BYTES => 32 * 1024
     )
     port map(
 	bus_addr => bus_addr(14 downto 0),
@@ -276,21 +276,21 @@ begin
 								sdr_dq => sdram_d,
 								
 								sdr_init_done => sdram_init_done,
-								cfg_sdr_tras_d => "0001",
-								cfg_sdr_trp_d => "0001",
-								cfg_sdr_trcd_d => "0001",
+								cfg_sdr_tras_d => "0010",
+								cfg_sdr_trp_d => "0010",
+								cfg_sdr_trcd_d => "0010",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
-								cfg_sdr_mode_reg => "0000000100001",
-								cfg_sdr_cas => "011",
-								cfg_sdr_trcar_d => "0010",
-								cfg_sdr_twr_d => "0010",
-								cfg_sdr_rfsh => "001000000000",
+								cfg_sdr_mode_reg => "0000000110001",
+								cfg_sdr_cas => "100",
+								cfg_sdr_trcar_d => "0011",
+								cfg_sdr_twr_d => "0011",
+								cfg_sdr_rfsh => "000010000000",
 								cfg_sdr_rfmax => "010" 
 								);
 
-    -- SDRAM clock is also 50 MHz but phase shifted by 90 degrees
-    clkgen_inst: pll_sdram_1
+    -- SDRAM clock is also 75 MHz but phase shifted by 90 degrees
+    clkgen_inst: pll_1
     port map (
 	CLKI => clk_25mhz,
 	CLKOP => clk_sdram,
@@ -354,7 +354,7 @@ begin
     -- f32c SIO
     sio_instance: entity work.sio
     generic map (
-	C_clk_freq => 50,
+	C_clk_freq => 75,
 	C_break_detect => true
     )
     port map (

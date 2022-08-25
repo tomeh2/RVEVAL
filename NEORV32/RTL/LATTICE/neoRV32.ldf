@@ -2,7 +2,10 @@
 <BaliProject version="3.2" title="neoRV32" device="LFE5U-45F-6BG381C" default_implementation="impl">
     <Options/>
     <Implementation title="impl" dir="impl" description="impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options def_top="neorv32.neorv32_test_setup_approm" top="neorv32_test_setup_bootloader"/>
+        <Options def_top="neorv32.ram_memory">
+            <Option name="include path" value="../CUSTOM/SDRAM/core"/>
+            <Option name="top" value="neorv32_test_setup_bootloader"/>
+        </Options>
         <Source name="neorv32_test_setup_bootloader.vhd" type="VHDL" type_short="VHDL">
             <Options lib="work" top_module="neorv32_test_setup_bootloader"/>
         </Source>
@@ -141,13 +144,82 @@
         <Source name="../NEORV32/neorv32_xirq.vhd" type="VHDL" type_short="VHDL">
             <Options lib="neorv32"/>
         </Source>
-        <Source name="../CUSTOM/sdram.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
         <Source name="pll_sdram_1.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="../CUSTOM/boot_rom_mi32el.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_mi32eb.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_mi32el.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/boot_sio_rv32el.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/defs_bootblock.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/defs_f32c.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/defs_mi32.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/defs_rv32.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/rom.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/sio.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/ram_memory.vhd" type="VHDL" type_short="VHDL">
+            <Options lib="neorv32"/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_bank_ctl.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_bank_fsm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_bs_convert.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_define.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_req_gen.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/core/sdrc_xfr_ctl.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/lib/async_fifo.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/lib/sync_fifo.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/top/sdrc_top.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../CUSTOM/SDRAM/wb2sdrc/wb2sdrc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="../../../CONSTRAINTS/ulx3s.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+        <Source name="impl/impl.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="reveal.rvl" type="Reveal" type_short="Reveal">
             <Options/>
         </Source>
     </Implementation>

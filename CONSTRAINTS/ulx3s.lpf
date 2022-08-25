@@ -1,3 +1,4 @@
+rvl_alias "clk_i" "clk_i";
 ## ULX3S v2.x.x and v3.0.x
 
 # The clock "usb" and "gpdi" sheet
@@ -594,3 +595,4 @@ IOBUF  PORT "user_programn" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 # on PCB v1.7 shutdown is not connected to FPGA
 LOCATE COMP "shutdown" SITE "G16"; # FPGA receives
 IOBUF  PORT "shutdown" PULLMODE=DOWN IO_TYPE=LVCMOS33 DRIVE=4;
+BLOCK JTAGPATHS;

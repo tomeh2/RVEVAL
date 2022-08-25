@@ -44,9 +44,9 @@ use work.boot_rom_mi32el.all;
 entity rom is
     generic(
 	C_rom_size: natural := 2; -- in KBytes
-	C_arch: natural; -- ARCH_MI32 or ARCH_RV32 selects image to preload
-	C_big_endian: boolean; -- selects image to preload
-	C_boot_spi: boolean -- selects image to preload
+	C_arch: natural := ARCH_RV32; -- ARCH_MI32 or ARCH_RV32 selects image to preload
+	C_big_endian: boolean := false; -- selects image to preload
+	C_boot_spi: boolean := false -- selects image to preload
     );
     port(
 	clk: in std_logic;

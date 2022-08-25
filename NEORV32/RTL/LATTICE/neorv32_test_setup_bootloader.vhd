@@ -171,7 +171,11 @@ architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader 
   signal ram_cyc : std_logic;
   signal ram_en : std_logic;
   
+  signal sdram_ack_delayed : std_logic;
+  
   signal led_out : std_logic_vector(15 downto 0);
+  
+  signal sdram_ack_delay : std_logic;
 begin
 --    process
 --    begin
@@ -215,6 +219,9 @@ begin
     IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
     IO_UART0_EN                  => true,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
     
+	MEM_EXT_ASYNC_RX             => false,  -- use register buffer for RX data when false
+    MEM_EXT_ASYNC_TX             => false,  -- use register buffer for TX data when false
+	
     MEM_EXT_EN                   => true
   )
   port map (
@@ -252,7 +259,7 @@ begin
                    data_ready => rom_ack,
                    data_out => rom_rdata);
 
-   
+   /*
     ram_memory : entity neorv32.ram_memory
                  generic map(SIZE_BYTES => 32 * 1024)
                  port map(bus_addr => std_logic_vector(wb_addr(14 downto 0)),
@@ -264,8 +271,8 @@ begin
                           wr_en => ram_wr_en,
                           stb => ram_en,
                           clk => clk_i,
-                          resetn => rstn_i);
-	/*
+                          resetn => rstn_i);*/
+	
 	sdram_controller: sdrc_top
 				      port map(sdram_clk => clk_i,
 								sdram_resetn => rstn_i,
@@ -295,19 +302,21 @@ begin
 								sdr_dq => sdram_d,
 								
 								sdr_init_done => open,
-								cfg_sdr_tras_d => "0001",
-								cfg_sdr_trp_d => "0001",
-								cfg_sdr_trcd_d => "0001",
+								cfg_sdr_tras_d => "0010",
+								cfg_sdr_trp_d => "0010",
+								cfg_sdr_trcd_d => "0010",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
 								cfg_sdr_mode_reg => "0000000100001",
 								cfg_sdr_cas => "011",
 								cfg_sdr_trcar_d => "0010",
 								cfg_sdr_twr_d => "0010",
-								cfg_sdr_rfsh => "001000000000",
+								cfg_sdr_rfsh => "000100000000",
 								cfg_sdr_rfmax => "010" 
 								);
-*//*
+
+	
+
     process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we)
     begin
         case wb_addr(31 downto 28) is
@@ -316,12 +325,11 @@ begin
                 ram_we <= wb_we;
                 ram_cyc <= wb_cyc;
                 ram_stb <= wb_stb;
-                ram_sel <= wb_sel;
+                ram_sel <= wb_sel when wb_we = '1' else "0000";
                 wb_dat_i <= std_ulogic_vector(ram_rdata);
-				ram_wr_en 
                 rom_stb <= '0';
             when others => 
-                rom_stb <= wb_stb;
+                rom_stb <= wb_stb and wb_cyc;
                 rom_addr <= std_logic_vector(wb_addr(31 downto 2));
                 ram_we <= '0';
                 ram_cyc <= '0';
@@ -329,10 +337,10 @@ begin
                 ram_sel <= X"0";
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
         end case;
-    end process;*/
+    end process;
 
-	ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 
-
+	--ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 
+/*
     process(wb_addr, ram_rdata, rom_rdata, wb_addr, wb_stb)
     begin
         case wb_addr(31 downto 28) is
@@ -348,7 +356,7 @@ begin
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
         end case;
     end process;
-
+*/
 
 	led <= led_out(7 downto 0);
 
