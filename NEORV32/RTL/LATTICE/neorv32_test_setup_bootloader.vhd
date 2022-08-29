@@ -46,7 +46,7 @@ use neorv32.f32c_pack.all;
 entity neorv32_test_setup_bootloader is
   generic (
     -- adapt these for your setup --
-    CLOCK_FREQUENCY   : natural := 50000000; -- clock frequency of clk_i in Hz
+    CLOCK_FREQUENCY   : natural := 62000000; -- clock frequency of clk_i in Hz
     MEM_INT_IMEM_SIZE : natural := 16*1024;   -- size of processor-internal instruction memory in bytes
     MEM_INT_DMEM_SIZE : natural := 128*1024     -- size of processor-internal data memory in bytes
   );
@@ -78,7 +78,7 @@ entity neorv32_test_setup_bootloader is
 end entity;
 
 architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader is
-	component pll_sdram_1
+	component pll_65
 	port(
 		CLKI : in std_logic;
 		CLKOP : out std_logic;
@@ -191,7 +191,7 @@ begin
 	
 	sdram_clk <= clk_sdram;
 	
-	clk_gen: pll_sdram_1
+	clk_gen: pll_65
 		port map(CLKI => clk_25mhz,
 				  CLKOP => clk_sdram,
 				  CLKOS => clk_i);
@@ -205,7 +205,7 @@ begin
     INT_BOOTLOADER_EN            => false,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
     CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
     CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
     -- Internal Instruction memory --
@@ -219,6 +219,10 @@ begin
     IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
     IO_UART0_EN                  => true,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
     
+	ICACHE_EN					 => true,
+	FAST_MUL_EN                  => true,				-- use DSPs for M extension's multiplier
+    FAST_SHIFT_EN                => true,  			-- use barrel shifter for shift operations
+	
 	MEM_EXT_ASYNC_RX             => false,  -- use register buffer for RX data when false
     MEM_EXT_ASYNC_TX             => false,  -- use register buffer for TX data when false
 	
@@ -259,10 +263,10 @@ begin
                    data_ready => rom_ack,
                    data_out => rom_rdata);
 
-   /*
+   
     ram_memory : entity neorv32.ram_memory
-                 generic map(SIZE_BYTES => 32 * 1024)
-                 port map(bus_addr => std_logic_vector(wb_addr(14 downto 0)),
+                 generic map(SIZE_BYTES => 128 * 1024)
+                 port map(bus_addr => std_logic_vector(wb_addr(16 downto 0)),
                           bus_wdata => std_logic_vector(wb_dat_o),
                           bus_rdata => ram_rdata,
                           bus_wstrb => std_logic_vector(wb_sel),
@@ -271,8 +275,8 @@ begin
                           wr_en => ram_wr_en,
                           stb => ram_en,
                           clk => clk_i,
-                          resetn => rstn_i);*/
-	
+                          resetn => rstn_i);
+	/*
 	sdram_controller: sdrc_top
 				      port map(sdram_clk => clk_i,
 								sdram_resetn => rstn_i,
@@ -313,10 +317,10 @@ begin
 								cfg_sdr_twr_d => "0010",
 								cfg_sdr_rfsh => "000100000000",
 								cfg_sdr_rfmax => "010" 
-								);
+								);*/
 
 	
-
+/*
     process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we)
     begin
         case wb_addr(31 downto 28) is
@@ -328,6 +332,7 @@ begin
                 ram_sel <= wb_sel when wb_we = '1' else "0000";
                 wb_dat_i <= std_ulogic_vector(ram_rdata);
                 rom_stb <= '0';
+				ram_en <= wb_stb and wb_cyc;
             when others => 
                 rom_stb <= wb_stb and wb_cyc;
                 rom_addr <= std_logic_vector(wb_addr(31 downto 2));
@@ -335,13 +340,12 @@ begin
                 ram_cyc <= '0';
                 ram_stb <= '0';
                 ram_sel <= X"0";
+				ram_en <= '0';
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
         end case;
-    end process;
+    end process;*/
 
-	--ram_en <= '1' when wb_addr(31 downto 28) = X"8" and wb_stb = '1' else '0'; 
-/*
-    process(wb_addr, ram_rdata, rom_rdata, wb_addr, wb_stb)
+    process(wb_addr, ram_rdata, rom_rdata, wb_addr, wb_stb, wb_cyc)
     begin
         case wb_addr(31 downto 28) is
             when X"8" => 
@@ -349,14 +353,16 @@ begin
                 ram_wr_en <= wb_we;
                 wb_dat_i <= std_ulogic_vector(ram_rdata);
                 rom_stb <= '0';
+				ram_en <= wb_stb and wb_cyc;
             when others => 
                 rom_stb <= wb_stb;
                 rom_addr <= std_logic_vector(wb_addr(31 downto 2));
                 ram_wr_en <= '0';
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
+				ram_en <= '0';
         end case;
     end process;
-*/
+
 
 	led <= led_out(7 downto 0);
 

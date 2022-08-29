@@ -192,6 +192,8 @@ architecture structural of top_synth is
 
     signal mmio_bus_ready: std_logic;
     signal unmapped_bus_ready: std_logic;
+	
+	signal trap : std_logic;
 
 begin
     resetn <= btn(0) and not sio_break;
@@ -214,7 +216,9 @@ begin
 	pcpi_wr => '0',
 	pcpi_rd => X"0000_0000",
 	pcpi_ready => '0',
-	pcpi_wait => '0'
+	pcpi_wait => '0',
+	
+	trap => trap
     );
     bus_write <= bus_valid when bus_wstrb /= "0000" else '0';
 
@@ -234,10 +238,10 @@ begin
 					
     ram: entity work.ram_memory(rtl)
     generic map (
-	SIZE_BYTES => 32 * 1024
+	SIZE_BYTES => 128 * 1024
     )
     port map(
-	bus_addr => bus_addr(14 downto 0),
+	bus_addr => bus_addr(16 downto 0),
 	bus_wdata => bus_wdata,
 	bus_rdata => ram_bus_rdata,
 	bus_wstrb => bus_wstrb,
@@ -375,6 +379,7 @@ begin
       & btn(3) & btn(5) & btn(4) & btn(6) when rising_edge(clk);
     R_simple_out <= bus_wdata when rising_edge(clk) and bus_write = '1' and
       simple_out_cs = '1';
-    led <= R_simple_out(7 downto 0);
+    led(7 downto 1) <= R_simple_out(7 downto 1);
+	led(0) <= trap;
 
 end structural;

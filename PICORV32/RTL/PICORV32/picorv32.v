@@ -73,14 +73,14 @@ module picorv32 #(
 	parameter [ 0:0] CATCH_MISALIGN = 1,
 	parameter [ 0:0] CATCH_ILLINSN = 1,
 	parameter [ 0:0] ENABLE_PCPI = 0,
-	parameter [ 0:0] ENABLE_MUL = 0,
-	parameter [ 0:0] ENABLE_FAST_MUL = 0,
-	parameter [ 0:0] ENABLE_DIV = 0,
+	parameter [ 0:0] ENABLE_MUL = 1,
+	parameter [ 0:0] ENABLE_FAST_MUL = 1,
+	parameter [ 0:0] ENABLE_DIV = 1,
 	parameter [ 0:0] ENABLE_IRQ = 0,
 	parameter [ 0:0] ENABLE_IRQ_QREGS = 1,
 	parameter [ 0:0] ENABLE_IRQ_TIMER = 1,
 	parameter [ 0:0] ENABLE_TRACE = 0,
-	parameter [ 0:0] REGS_INIT_ZERO = 0,
+	parameter [ 0:0] REGS_INIT_ZERO = 1,
 	parameter [31:0] MASKED_IRQ = 32'h 0000_0000,
 	parameter [31:0] LATCHED_IRQ = 32'h ffff_ffff,
 	parameter [31:0] PROGADDR_RESET = 32'h 0000_0000,
@@ -119,7 +119,7 @@ module picorv32 #(
 	// IRQ Interface
 	input      [31:0] irq,
 	output reg [31:0] eoi,
-
+	
 `ifdef RISCV_FORMAL
 	output reg        rvfi_valid,
 	output reg [63:0] rvfi_order,
@@ -321,7 +321,7 @@ module picorv32 #(
 		assign pcpi_div_wait = 0;
 		assign pcpi_div_ready = 0;
 	end endgenerate
-
+	
 	always @* begin
 		pcpi_int_wr = 0;
 		pcpi_int_rd = 32'bx;
