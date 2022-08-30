@@ -2,7 +2,7 @@
 <BaliProject version="3.2" title="neoRV32" device="LFE5U-45F-6BG381C" default_implementation="impl">
     <Options/>
     <Implementation title="impl" dir="impl" description="impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options def_top="neorv32.ram_memory">
+        <Options def_top="neorv32.neorv32_test_setup_approm">
             <Option name="include path" value="../CUSTOM/SDRAM/core"/>
             <Option name="top" value="neorv32_test_setup_bootloader"/>
         </Options>
@@ -213,13 +213,19 @@
         <Source name="../CUSTOM/SDRAM/wb2sdrc/wb2sdrc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="pll_test/pll_75/pll_75.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="pll_test/pll_90/pll_90.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="pll_test/pll_35/pll_35.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="pll_test/pll_65/pll_65.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="../../../CONSTRAINTS/ulx3s.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-        <Source name="impl/impl.xcf" type="Programming Project File" type_short="Programming">
-            <Options/>
-        </Source>
-        <Source name="reveal.rvl" type="Reveal" type_short="Reveal">
             <Options/>
         </Source>
     </Implementation>

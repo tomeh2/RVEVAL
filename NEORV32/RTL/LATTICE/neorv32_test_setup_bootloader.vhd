@@ -171,6 +171,15 @@ architecture neorv32_test_setup_bootloader_rtl of neorv32_test_setup_bootloader 
   signal ram_cyc : std_logic;
   signal ram_en : std_logic;
   
+  signal sdram_wr_en : std_logic;
+  signal sdram_wb_rdata : std_logic_vector(31 downto 0);
+  signal sdram_wb_sel : std_logic_vector(3 downto 0);
+  signal sdram_wb_ack : std_logic;
+  signal sdram_wb_we : std_logic;
+  signal sdram_wb_stb : std_logic;
+  signal sdram_wb_cyc : std_logic;
+  signal sdram_wb_en : std_logic;
+  
   signal sdram_ack_delayed : std_logic;
   
   signal led_out : std_logic_vector(15 downto 0);
@@ -205,7 +214,7 @@ begin
     INT_BOOTLOADER_EN            => false,              -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
     -- RISC-V CPU Extensions --
     CPU_EXTENSION_RISCV_C        => false,              -- implement compressed extension?
-    CPU_EXTENSION_RISCV_M        => true,              -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_M        => false,              -- implement mul/div extension?
     CPU_EXTENSION_RISCV_Zicsr    => true,              -- implement CSR system?
     CPU_EXTENSION_RISCV_Zicntr   => true,              -- implement base counters?
     -- Internal Instruction memory --
@@ -219,7 +228,7 @@ begin
     IO_MTIME_EN                  => true,              -- implement machine system timer (MTIME)?
     IO_UART0_EN                  => true,              -- implement primary universal asynchronous receiver/transmitter (UART0)?
     
-	ICACHE_EN					 => true,
+	ICACHE_EN					 => false,
 	FAST_MUL_EN                  => true,				-- use DSPs for M extension's multiplier
     FAST_SHIFT_EN                => true,  			-- use barrel shifter for shift operations
 	
@@ -276,7 +285,7 @@ begin
                           stb => ram_en,
                           clk => clk_i,
                           resetn => rstn_i);
-	/*
+	
 	sdram_controller: sdrc_top
 				      port map(sdram_clk => clk_i,
 								sdram_resetn => rstn_i,
@@ -285,14 +294,14 @@ begin
 								
 								wb_rst_i => not rstn_i,
 								wb_clk_i => clk_i,
-								wb_stb_i => ram_stb,
-								wb_ack_o => ram_ack,
+								wb_stb_i => sdram_wb_stb,
+								wb_ack_o => sdram_wb_ack,
 								wb_addr_i => wb_addr(25 downto 0),
-								wb_we_i => ram_we,
+								wb_we_i => sdram_wb_we,
 								wb_dat_i => wb_dat_o,
-								wb_sel_i => ram_sel,
-								wb_dat_o => ram_rdata,
-								wb_cyc_i => ram_cyc,
+								wb_sel_i => sdram_wb_sel,
+								wb_dat_o => sdram_wb_rdata,
+								wb_cyc_i => sdram_wb_cyc,
 								wb_cti_i => "000",
 								
 								sdr_cke => sdram_cke,
@@ -306,45 +315,62 @@ begin
 								sdr_dq => sdram_d,
 								
 								sdr_init_done => open,
-								cfg_sdr_tras_d => "0010",
-								cfg_sdr_trp_d => "0010",
-								cfg_sdr_trcd_d => "0010",
+								cfg_sdr_tras_d => "0011",
+								cfg_sdr_trp_d => "0011",
+								cfg_sdr_trcd_d => "0011",
 								cfg_sdr_en => '1', 
 								cfg_req_depth => "01",
-								cfg_sdr_mode_reg => "0000000100001",
-								cfg_sdr_cas => "011",
-								cfg_sdr_trcar_d => "0010",
-								cfg_sdr_twr_d => "0010",
-								cfg_sdr_rfsh => "000100000000",
-								cfg_sdr_rfmax => "010" 
-								);*/
+								cfg_sdr_mode_reg => "0000000110001",
+								cfg_sdr_cas => "100",
+								cfg_sdr_trcar_d => "0011",
+								cfg_sdr_twr_d => "0011",
+								cfg_sdr_rfsh => "000010000000",
+								cfg_sdr_rfmax => "011" 
+								);
 
 	
-/*
-    process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we)
+
+    process(wb_addr, ram_rdata, rom_rdata, wb_stb, wb_cyc, wb_sel, wb_we, sdram_wb_rdata)
     begin
+		rom_addr <= (others => '0');
+        ram_wr_en <= '0';
+        wb_dat_i <= (others => '0');
+        rom_stb <= '0';
+		ram_en <= '0';
+	
+		sdram_wb_we <= '0';
+        sdram_wb_cyc <= '0';
+        sdram_wb_stb <= '0';
+        sdram_wb_sel <= "0000";
+		sdram_wb_en <= '0';
+		
+		ram_we <= '0';
+        ram_cyc <= '0';
+        ram_stb <= '0';
+        ram_sel <= X"0";
+		ram_en <= '0';
+	
         case wb_addr(31 downto 28) is
             when X"8" => 
-                rom_addr <= (others => '0');
-                ram_we <= wb_we;
-                ram_cyc <= wb_cyc;
-                ram_stb <= wb_stb;
-                ram_sel <= wb_sel when wb_we = '1' else "0000";
-                wb_dat_i <= std_ulogic_vector(ram_rdata);
-                rom_stb <= '0';
-				ram_en <= wb_stb and wb_cyc;
+                sdram_wb_we <= wb_we;
+                sdram_wb_cyc <= wb_cyc;
+                sdram_wb_stb <= wb_stb;
+                sdram_wb_sel <= wb_sel when wb_we = '1' else "0000";
+                wb_dat_i <= std_ulogic_vector(sdram_wb_rdata);			
+			when X"0" | X"1" => 
+				if (wb_addr(27 downto 10) = X"0000" & "00") then
+					rom_stb <= wb_stb and wb_cyc;
+					rom_addr <= std_logic_vector(wb_addr(31 downto 2));
+					wb_dat_i <= std_ulogic_vector(rom_rdata);
+				else
+					ram_wr_en <= wb_we;
+					wb_dat_i <= std_ulogic_vector(ram_rdata);
+					ram_en <= wb_stb and wb_cyc;
+				end if;
             when others => 
-                rom_stb <= wb_stb and wb_cyc;
-                rom_addr <= std_logic_vector(wb_addr(31 downto 2));
-                ram_we <= '0';
-                ram_cyc <= '0';
-                ram_stb <= '0';
-                ram_sel <= X"0";
-				ram_en <= '0';
-                wb_dat_i <= std_ulogic_vector(rom_rdata);
         end case;
-    end process;*/
-
+    end process;
+/*
     process(wb_addr, ram_rdata, rom_rdata, wb_addr, wb_stb, wb_cyc)
     begin
         case wb_addr(31 downto 28) is
@@ -361,12 +387,12 @@ begin
                 wb_dat_i <= std_ulogic_vector(rom_rdata);
 				ram_en <= '0';
         end case;
-    end process;
+    end process;*/
 
 
 	led <= led_out(7 downto 0);
 
-    wb_ack <= ram_ack or rom_ack;
+    wb_ack <= ram_ack or rom_ack or sdram_wb_ack;
 
 
 end architecture;
