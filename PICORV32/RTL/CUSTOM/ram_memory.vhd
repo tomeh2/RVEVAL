@@ -39,33 +39,35 @@ architecture rtl of ram_memory is
 begin
     ram_cntrl : process(clk)
     begin
+        if (falling_edge(clk)) then
+            bus_rdata <= ram(to_integer(unsigned(bus_addr(BUS_ADDR_BITS - 1 downto 2))));
+        end if;
+        
         if (rising_edge(clk)) then
             if (en = '1') then
-                if (bus_wstrb = "0000") then
-                    bus_rdata <= ram(to_integer(unsigned(bus_addr(BUS_ADDR_BITS - 1 downto 2))));
-                else
                     for i in 0 to NB_COL - 1 loop
                         if (bus_wstrb(i) = '1') then
                             ram(to_integer(unsigned(bus_addr(BUS_ADDR_BITS - 1 downto 2))))((i + 1) * COL_WIDTH - 1 downto i * COL_WIDTH) <= bus_wdata((i + 1) * COL_WIDTH - 1 downto i * COL_WIDTH);
                         end if;
                     end loop;
                 end if;
-            end if;
         end if;
     end process;
 
-    bus_cntrl : process(clk)
-    begin
-        if (rising_edge(clk)) then
-            if (resetn = '0') then
-                bus_ready_i <= '0';
-            else
-                bus_ready_i <= en and not bus_ready_i;
-            end if;
-        end if;
-    end process;
+--    bus_cntrl : process(clk)
+--    begin
+--        if (rising_edge(clk)) then
+--            if (resetn = '0') then
+--                bus_ready_i <= '0';
+--            else
+--                bus_ready_i <= en and not bus_ready_i;
+--            end if;
+--        end if;
+--    end process;
     
     we <= '0' when bus_wstrb = "0000" else '1';
-    bus_ready <= bus_ready_i;
+    
+    --bus_ready <= bus_ready_i;
+    bus_ready <= en;
 
 end rtl;

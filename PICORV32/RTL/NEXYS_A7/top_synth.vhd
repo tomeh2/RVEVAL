@@ -85,14 +85,11 @@ architecture structural of top_synth is
 	);
 	end component;
 
-    component clk_wiz_0_clk_wiz
+    component clk_wiz_0
     port
         (-- Clock in ports
         -- Clock out ports
         clk_out1          : out    std_logic;
-        clk_out2          : out    std_logic;
-        clk_out3          : out    std_logic;
-        clk_out4          : out    std_logic;
         -- Status and control signals
         locked             : out     std_logic;
         clk_in1           : in     std_logic
@@ -101,7 +98,7 @@ architecture structural of top_synth is
     
     component picorv32
 		generic(
-			STACKADDR : std_logic_vector(31 downto 0) := X"8000_4000";
+			STACKADDR : std_logic_vector(31 downto 0) := X"8004_0000";
 			PROGADDR_RESET : std_logic_vector(31 downto 0) := X"0000_0000";
 			ENABLE_COUNTERS : boolean := true;
 			ENABLE_COUNTERS64 : boolean := true;
@@ -115,14 +112,14 @@ architecture structural of top_synth is
 			COMPRESSED_ISA : boolean := false;
 			CATCH_ILLINSN : boolean := true;
 			ENABLE_PCPI : boolean := false;
-			ENABLE_MUL : boolean := true;
-			ENABLE_DIV : boolean := true;
-			ENABLE_FAST_MUL : boolean := true;
+			ENABLE_MUL : boolean := false;
+			ENABLE_DIV : boolean := false;
+			ENABLE_FAST_MUL : boolean := false;
 			ENABLE_IRQ : boolean := false;
 			ENABLE_IRQ_QREGS : boolean := true;
 			ENABLE_IRQ_TIMER : boolean := true;
 			ENABLE_TRACE : boolean := false;
-			REGS_INIT_ZERO : boolean := false;
+			REGS_INIT_ZERO : boolean := true;
 			MASKED_IRQ : std_logic_vector(31 downto 0) := (others => '0');
 			LATCHED_IRQ : std_logic_vector(31 downto 0) := (others => '0');
 			PROGADDR_IRQ : std_logic_vector(31 downto 0) := (others => '0')
@@ -185,6 +182,8 @@ architecture structural of top_synth is
 		);
 	end component;
 
+    signal trap : std_logic;
+
     -- Top 8 bits of the address that are used in address decoding. For ex. if SDRAM_ADDR_TOP has a value of 0x30 then accessing addresses whose top 8 bits
     -- are 0x30 will access SDRAM
     
@@ -217,14 +216,10 @@ architecture structural of top_synth is
     signal mmio_bus_ready: std_logic;
     signal unmapped_bus_ready: std_logic;
 begin
-    clk_wiz : clk_wiz_0_clk_wiz
+    clk_wiz : clk_wiz_0
               port map(clk_in1 => CLK100MHZ,
                        locked => clk_locked,
-                       clk_out1 => clk,
-                       clk_out2 => open,
-                       clk_out3 => open,
-                       clk_out4 => open);
-
+                       clk_out1 => clk);
 
     resetn <= CPU_RESETN and not sio_break and clk_locked;
     --resetn <= CPU_RESETN;
@@ -247,7 +242,10 @@ begin
 	pcpi_wr => '0',
 	pcpi_rd => X"0000_0000",
 	pcpi_ready => '0',
-	pcpi_wait => '0'
+	pcpi_wait => '0',
+	
+	
+	trap => trap
     );
     bus_write <= bus_valid when bus_wstrb /= "0000" else '0';
 
@@ -263,21 +261,6 @@ begin
 	addr => bus_addr(31 downto 2),
 	data_out => rom_bus_rdata,
 	data_ready => rom_bus_ready
-    );
-					
-    ram: entity work.ram_memory(rtl)
-    generic map (
-	SIZE_BYTES => 32768
-    )
-    port map(
-	bus_addr => bus_addr(14 downto 0),
-	bus_wdata => bus_wdata,
-	bus_rdata => ram_bus_rdata,
-	bus_wstrb => bus_wstrb,
-	bus_ready => ram_bus_ready,
-	en => ram_cs,
-	clk => clk,
-	resetn => resetn
     );
     
     sdram_replacement: entity work.ram_memory(rtl)
@@ -343,13 +326,13 @@ begin
 	end if;
     end process;
 
-    bus_ready <= rom_bus_ready or sdram_bus_ready or ram_bus_ready
+    bus_ready <= rom_bus_ready or sdram_bus_ready
       or mmio_bus_ready or unmapped_bus_ready;
 
     -- f32c SIO
     sio_instance: entity work.sio
     generic map (
-	C_clk_freq => 100,
+	C_clk_freq => 50,
 	C_break_detect => true
     )
     port map (
@@ -372,6 +355,7 @@ begin
       simple_out_cs = '1';
       
     LED(7 downto 0) <= R_simple_out(7 downto 0);
-    LED(15 downto 8) <= (others => '0');
+    LED(8) <= trap;
+    LED(15 downto 9) <= (others => '0');
 
 end structural;
